@@ -148,6 +148,22 @@ export default function App() {
     return () => assinatura.remove();
   }, [estado.registros, ocorrencias]);
 
+  useEffect(() => {
+    if (Platform.OS !== 'ios') return;
+    let assinatura: { remove: () => void } | undefined;
+    try {
+      const { addUserInteractionListener } = require('expo-widgets') as typeof import('expo-widgets');
+      assinatura = addUserInteractionListener(({ source, target }: { source: string; target: string }) => {
+        if (source !== 'RemedioWidget' || (target !== 'taken' && target !== 'snoozed')) return;
+        const proximo = ocorrencias.find((item) => !estado.registros.some((registro) => registro.id === item.id && registro.estado !== 'pendente'));
+        if (proximo) void marcar(proximo, target);
+      });
+    } catch {
+      // O módulo só está disponível no development build com o alvo WidgetKit.
+    }
+    return () => assinatura?.remove();
+  }, [estado.registros, ocorrencias]);
+
   const cadastrarMedicamento = async () => {
     const nomeLimpo = nome.trim();
     if (!nomeLimpo || !/^([01]\d|2[0-3]):[0-5]\d$/.test(horario)) {
