@@ -1,13 +1,15 @@
 {
   "expo": {
-    "name": "tmp.IZFHXTIFZt",
-    "slug": "tmp.IZFHXTIFZt",
+    "name": "Remédio em Dia",
+    "slug": "remedioemdia",
+    "scheme": "remedioemdia",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.mayc7n.remedioemdia"
     },
     "android": {
       "adaptiveIcon": {
@@ -16,10 +18,46 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.mayc7n.remedioemdia"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-notifications",
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "RemedioEmDia",
+              "label": "Remédio em Dia",
+              "minWidth": "320dp",
+              "minHeight": "120dp",
+              "targetCellWidth": 5,
+              "targetCellHeight": 2,
+              "description": "Veja o próximo remédio e abra as ações rápidas.",
+              "updatePeriodMillis": 1800000
+            }
+          ]
+        }
+      ],
+      [
+        "expo-widgets",
+        {
+          "groupIdentifier": "group.com.mayc7n.remedioemdia",
+          "widgets": [
+            {
+              "name": "RemedioWidget",
+              "displayName": "Remédio em Dia",
+              "description": "Veja o próximo lembrete rapidamente.",
+              "ios": { "supportedFamilies": ["systemSmall", "systemMedium"] }
+            }
+          ]
+        }
+      ]
+    ]
   }
 }

@@ -1,0 +1,4 @@
+<resources>
+  <string name="app_name">Remédio em Dia</string>
+  <string name="widget_remedioemdia_description" translatable="false">Veja o próximo remédio e abra as ações rápidas.</string>
+</resources>
