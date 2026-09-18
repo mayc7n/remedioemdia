@@ -1,0 +1,50 @@
+MELHORIAS — REMÉDIO EM DIA
+
+1. EDITAR, PAUSAR E EXCLUIR MEDICAMENTOS
+
+- Criar tela de detalhe do medicamento.
+- Permitir editar horários e frequência.
+- Permitir pausar e retomar lembretes.
+- Permitir excluir o cadastro sem apagar o histórico.
+
+2. NOTIFICAÇÕES REALMENTE RECORRENTES
+
+- Agendar todos os horários recorrentes.
+- Criar lembretes de consultas e exames para 1 dia e 1 hora antes.
+- Reagendar após alterações sem criar duplicidades.
+- Recalcular lembretes ao mudar data ou fuso horário.
+
+3. WIDGET COM O MEDICAMENTO REAL
+
+- Exibir o nome do próximo medicamento no Android.
+- Exibir horário e estado atual.
+- Manter o histórico sincronizado mesmo quando o app estiver fechado.
+- Preservar as ações “Tomei” e “Adiar 15 min”.
+
+4. CADASTRO MAIS COMPLETO
+
+- Permitir vários horários por medicamento.
+- Permitir dias específicos da semana.
+- Permitir intervalo de dias.
+- Adicionar observação opcional fornecida pelo médico.
+
+5. CUIDADOR COM FLUXO CLARO
+
+- Permitir revogar a autorização.
+- Selecionar quais avisos compartilhar.
+- Informar claramente quando nenhum aviso externo foi enviado.
+- Evitar qualquer compartilhamento sem confirmação explícita.
+
+6. TESTES EM APARELHOS REAIS
+
+- Android físico: notificações, widget, tela bloqueada e leitor de tela.
+- iPhone físico: WidgetKit, Dynamic Type, safe area e permissões.
+- Validar VoiceOver e TalkBack.
+- Não considerar export do projeto como substituto de teste físico.
+
+7. ACESSIBILIDADE E REFATORAÇÃO
+
+- Separar o grande App.tsx em telas e componentes menores.
+- Validar fonte ampliada, contraste e foco.
+- Revisar áreas de toque.
+- Preservar suporte a VoiceOver e TalkBack.
