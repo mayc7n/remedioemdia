@@ -25,6 +25,7 @@ import {
 } from './src/dominio/agenda';
 import { carregarEstado, salvarEstado } from './src/dados/armazenamento';
 import { adiarLembrete, agendarLembrete, prepararNotificacoes } from './src/notificacoes';
+import { interpretarAcaoWidget } from './src/widget/acoes';
 
 type Aba = 'inicio' | 'medicamentos' | 'historico' | 'mais';
 type ModalAtivo = 'medicamento' | 'consulta' | 'cuidador' | 'emergencia' | null;
@@ -133,6 +134,19 @@ export default function App() {
     await persistir({ ...estado, registros });
     if (acao === 'snoozed') await adiarLembrete(medicamento.nome);
   };
+
+  useEffect(() => {
+    const aplicarUrl = async (url: string | null) => {
+      const acao = url ? interpretarAcaoWidget(url) : null;
+      const proximo = ocorrencias.find((item) => !estado.registros.some((registro) => registro.id === item.id && registro.estado !== 'pendente'));
+      if (!acao || !proximo) return;
+      await marcar(proximo, acao);
+      setAba('inicio');
+    };
+    const assinatura = Linking.addEventListener('url', ({ url }) => { void aplicarUrl(url); });
+    void Linking.getInitialURL().then(aplicarUrl);
+    return () => assinatura.remove();
+  }, [estado.registros, ocorrencias]);
 
   const cadastrarMedicamento = async () => {
     const nomeLimpo = nome.trim();

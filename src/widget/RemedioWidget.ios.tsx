@@ -1,4 +1,4 @@
-import { Text, VStack } from '@expo/ui/swift-ui';
+import { Button, Text, VStack } from '@expo/ui/swift-ui';
 import { createWidget } from 'expo-widgets';
 
 type Props = { nome: string; horario: string };
@@ -10,6 +10,8 @@ function RemedioWidget({ nome, horario }: Props) {
       <Text>Remédio em Dia</Text>
       <Text>{nome}</Text>
       <Text>{horario}</Text>
+      <Button label="Tomei" target="taken" onPress={() => ({ nome, horario })} />
+      <Button label="Adiar 15 min" target="snoozed" onPress={() => ({ nome, horario })} />
     </VStack>
   );
 }
