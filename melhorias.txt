@@ -94,3 +94,69 @@ Depois:
 - execute npm run check apenas se esse script existir;
 - informe claramente o que foi testado e o que ainda exige aparelho físico;
 - nunca trate exportação do projeto como substituto de teste real em Android ou iOS.
+
+CHECKPOINT PARA RETOMAR AMANHÃ — 2026-09-19
+
+O que já foi aplicado nesta etapa:
+
+- App completo com navegação própria, além dos widgets Android e iOS.
+- Widget protegido contra inicialização indevida no Expo Go; development build continua sendo necessário para validar os widgets nativos.
+- Ícone novo aplicado no app, no Android e no iOS, sem a aparência semelhante ao Android Auto.
+- Redesign das telas principais com navegação inferior estável, cards mais discretos e identidade visual própria.
+- Cadastro de horários de medicamentos com seletor nativo multiplataforma e horário de 24 horas.
+- Cadastro de consultas e exames com seletor nativo e apresentação brasileira: `dd/mm/aaaa às HH:mm`.
+- Safe area, dependências do Expo SDK 57 e `expo-system-ui` ajustados.
+- Commit enviado para `origin/main`: `143e78826f893d3e3814b6d528ffb3a7ea3d742c`.
+
+Próximas melhorias, em ordem recomendada:
+
+1. QA FÍSICO DO APP E DOS WIDGETS
+
+- Android development build: abrir o app, adicionar/editar medicamento, testar notificações, widget, ações “Tomei” e “Adiar” e reinício do aparelho.
+- iOS development build: testar WidgetKit, ações do widget, permissões, safe area, fonte ampliada e retorno do widget para o app.
+- Validar VoiceOver no iOS e TalkBack no Android.
+- Registrar os resultados em `docs/qa-fisico.md`.
+
+2. PRIVACIDADE NAS NOTIFICAÇÕES E NA TELA BLOQUEADA
+
+- Revisar se o nome do medicamento deve aparecer por padrão na tela bloqueada.
+- Oferecer uma preferência para ocultar detalhes sensíveis da notificação.
+- Manter ações rápidas sem expor mais dados do que o necessário.
+
+3. CONFIABILIDADE DE AGENDA
+
+- Testar mudança manual de data, horário de verão e troca de fuso horário em aparelhos reais.
+- Confirmar que editar, pausar, retomar e excluir não cria notificações duplicadas.
+- Validar o comportamento depois de reiniciar o aparelho.
+
+4. HISTÓRICO E EXPERIÊNCIA DE USO
+
+- Permitir desfazer uma marcação feita por engano.
+- Exibir filtros simples por período e medicamento.
+- Diferenciar visualmente “Tomado”, “Adiado”, “Esquecido” e “Pendente” com texto e não apenas cor.
+
+5. REVISÃO FINAL DE ACESSIBILIDADE E DESIGN
+
+- Testar fonte ampliada sem corte ou sobreposição.
+- Revisar contraste, foco, ordem de leitura e áreas de toque.
+- Revisar estados vazios, mensagens de erro e confirmação de ações destrutivas.
+
+6. NOVA DIREÇÃO DE DESIGN — MAIS NATURAL E MAIS IOS
+
+- Reavaliar o redesign atual: ele melhorou a organização, mas ainda está com aparência genérica e excessivamente produzida por IA.
+- Buscar uma interface mais natural, calma, editorial e nativa, como um produto desenvolvido por um engenheiro e designer sênior da Apple.
+- Priorizar hierarquia tipográfica, espaçamento, alinhamento, conteúdo e comportamento nativo em vez de cards decorativos, gradientes, métricas artificiais ou elementos chamativos.
+- Usar o iOS como referência principal: navegação clara, barras e listas familiares, ações contextuais, folhas modais, controles nativos, feedback discreto e uso correto de safe area.
+- Manter a adaptação Android sem copiar visualmente o iOS: respeitar Material, back button, dimensões, acessibilidade e padrões de interação de cada plataforma.
+- Reduzir textos de marketing, slogans, números sem necessidade e excesso de caixas arredondadas.
+- Fazer o app parecer uma ferramenta confiável de rotina e cuidado, não um dashboard ou uma demonstração visual.
+- Revisar cada tela em três perguntas: isso é necessário, isso parece nativo e isso ajuda a pessoa a concluir a tarefa?
+- Antes de implementar, pesquisar referências atuais de interfaces nativas e documentar a direção visual escolhida.
+- Aplicar a mudança em uma tela por vez, começando pela tela inicial e pelo fluxo de cadastro de medicamento, com testes de acessibilidade e aparelho real.
+
+GATE PARA A PRÓXIMA SESSÃO
+
+- Não alterar o escopo antes de concluir o QA físico básico.
+- Preservar os dados locais existentes e o histórico.
+- Usar development builds para validar recursos nativos; Expo Go serve apenas para conferir a interface básica.
+- Depois do QA, escolher uma única melhoria de maior impacto, adicionar teste e validar novamente antes de outro commit.
