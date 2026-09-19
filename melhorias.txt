@@ -1,4 +1,6 @@
-MELHORIAS — REMÉDIO EM DIA
+MELHORIAS PENDENTES — REMÉDIO EM DIA
+
+Implementação interrompida após a fundação do domínio: migração v1→v2, frequência diária/dias da semana/intervalo, situações ativo/pausado/excluído e preservação do histórico foram implementadas no branch de trabalho. As melhorias abaixo continuam pendentes.
 
 1. EDITAR, PAUSAR E EXCLUIR MEDICAMENTOS
 
