@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Linking, Platform, Pressable, SafeAreaView, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, Pressable, SafeAreaView, ScrollView, Text, View } from 'react-native';
 import { Botao } from './src/componentes/Botao';
 import { CaixaModal } from './src/componentes/CaixaModal';
 import { Campo } from './src/componentes/Campo';
@@ -16,14 +16,17 @@ import {
   ocorrenciasDoDia,
 } from './src/dominio/agenda';
 import {
-  adiarLembrete,
   agendarAdiantamento,
   prepararNotificacoes,
   sincronizarNotificacoesComFuso,
 } from './src/notificacoes';
+import { salvarCuidadorComConsentimento, revogarCuidador } from './src/cuidador';
+import { ConsultaForm } from './src/telas/ConsultaForm';
+import { CuidadorForm } from './src/telas/CuidadorForm';
 import { Historico } from './src/telas/Historico';
 import { Inicio } from './src/telas/Inicio';
 import { DetalheMedicamento } from './src/telas/DetalheMedicamento';
+import { Mais as MaisTela } from './src/telas/Mais';
 import { Medicamentos } from './src/telas/Medicamentos';
 import { interpretarAcaoWidget } from './src/widget/acoes';
 
@@ -56,8 +59,11 @@ export default function App() {
   const [consultaTitulo, setConsultaTitulo] = useState('');
   const [consultaData, setConsultaData] = useState('');
   const [consultaTipo, setConsultaTipo] = useState<'consulta' | 'exame'>('consulta');
+  const [consultaLocal, setConsultaLocal] = useState('');
+  const [consultaObservacao, setConsultaObservacao] = useState('');
   const [cuidadorNome, setCuidadorNome] = useState('');
   const [cuidadorContato, setCuidadorContato] = useState('');
+  const [cuidadorAvisos, setCuidadorAvisos] = useState({ esquecido: true, adiado: true, consulta: true });
 
   const persistir = async (proximo: EstadoApp, sincronizar = true) => {
     const resultado = sincronizar ? await sincronizarNotificacoesComFuso(proximo) : { estado: proximo, fusoMudou: false, quantidade: 0 };
@@ -133,12 +139,23 @@ export default function App() {
       Alert.alert('Confira os dados', 'Use a data e hora no formato 2026-09-20T14:30.');
       return;
     }
-    const nova: Consulta = { id: idNovo(), tipo: consultaTipo, titulo: consultaTitulo.trim(), marcadoPara: consultaData, lembretes: true, concluida: false };
+    const nova: Consulta = { id: idNovo(), tipo: consultaTipo, titulo: consultaTitulo.trim(), marcadoPara: consultaData, local: consultaLocal.trim() || undefined, observacao: consultaObservacao.trim() || undefined, lembretes: true, concluida: false };
     await persistir({ ...estado, consultas: [...estado.consultas, nova] });
     setConsultaTitulo('');
     setConsultaData('');
+    setConsultaLocal('');
+    setConsultaObservacao('');
     setModal(null);
   };
+
+  const concluirConsulta = async (id: string) => {
+    await persistir({ ...estado, consultas: estado.consultas.map((consulta) => consulta.id === id ? { ...consulta, concluida: true } : consulta) });
+  };
+
+  const excluirConsulta = (id: string) => Alert.alert('Remover compromisso?', 'Os lembretes desse compromisso serão cancelados.', [
+    { text: 'Cancelar', style: 'cancel' },
+    { text: 'Remover', style: 'destructive', onPress: async () => persistir({ ...estado, consultas: estado.consultas.filter((consulta) => consulta.id !== id) }) },
+  ]);
 
   const salvarCuidador = async () => {
     if (!cuidadorNome.trim() || !cuidadorContato.trim()) {
@@ -148,11 +165,16 @@ export default function App() {
     Alert.alert('Autorizar cuidador?', 'O compartilhamento só será ativado com sua confirmação.', [
       { text: 'Cancelar', style: 'cancel' },
       { text: 'Autorizar', onPress: async () => {
-        await persistir({ ...estado, cuidador: { nome: cuidadorNome.trim(), contato: cuidadorContato.trim(), consentimentoAtivo: true, autorizadoEm: new Date().toISOString(), avisos: { esquecido: true, adiado: true, consulta: true } } });
+        await persistir(salvarCuidadorComConsentimento(estado, { nome: cuidadorNome, contato: cuidadorContato, avisos: cuidadorAvisos }, true));
         setModal(null);
       } },
     ]);
   };
+
+  const revogarAutorizacao = () => Alert.alert('Revogar autorização?', 'Nenhum aviso externo será enviado.', [
+    { text: 'Cancelar', style: 'cancel' },
+    { text: 'Revogar', style: 'destructive', onPress: async () => { await persistir(revogarCuidador(estado, true)); setModal(null); } },
+  ]);
 
   if (carregando) return <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: cores.fundo }}><ActivityIndicator color={cores.verde} size="large" /></View>;
 
@@ -167,24 +189,20 @@ export default function App() {
       {aba === 'inicio' && <Inicio ocorrencias={ocorrencias} registros={estado.registros} consultas={consultasFuturas} marcar={marcar} abrirMedicamento={() => setMedicamentoAberto('novo')} />}
       {aba === 'medicamentos' && <Medicamentos medicamentos={estado.medicamentos} abrirDetalhe={setMedicamentoAberto} abrirNovo={() => setMedicamentoAberto('novo')} />}
       {aba === 'historico' && <Historico registros={estado.registros} />}
-      {aba === 'mais' && <Mais consultas={consultasFuturas} cuidador={estado.cuidador} abrirConsulta={() => setModal('consulta')} abrirCuidador={() => setModal('cuidador')} />}
+      {aba === 'mais' && <MaisTela consultas={consultasFuturas} cuidador={estado.cuidador} abrirConsulta={() => setModal('consulta')} abrirCuidador={() => setModal('cuidador')} concluirConsulta={concluirConsulta} excluirConsulta={excluirConsulta} />}
     </ScrollView>
     <View style={{ position: 'absolute', left: 12, right: 12, bottom: 12, backgroundColor: cores.texto, borderRadius: 20, flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 8 }}>
       {([['inicio', 'Hoje'], ['medicamentos', 'Remédios'], ['historico', 'Histórico'], ['mais', 'Mais']] as [Aba, string][]).map(([chave, texto]) => <Pressable key={chave} accessibilityRole="tab" accessibilityState={{ selected: aba === chave }} onPress={() => setAba(chave)} style={{ alignItems: 'center', minWidth: 70, minHeight: 48, justifyContent: 'center' }}><Text style={{ color: aba === chave ? cores.branco : '#A9B7B0', fontSize: 12, fontWeight: '700' }}>{texto}</Text></Pressable>)}
     </View>
-    <ModalConsulta visivel={modal === 'consulta'} fechar={() => setModal(null)} titulo={consultaTitulo} setTitulo={setConsultaTitulo} data={consultaData} setData={setConsultaData} tipo={consultaTipo} setTipo={setConsultaTipo} salvar={cadastrarConsulta} />
-    <ModalCuidador visivel={modal === 'cuidador'} fechar={() => setModal(null)} nome={cuidadorNome} setNome={setCuidadorNome} contato={cuidadorContato} setContato={setCuidadorContato} salvar={salvarCuidador} />
+    <ModalConsulta visivel={modal === 'consulta'} fechar={() => setModal(null)} titulo={consultaTitulo} setTitulo={setConsultaTitulo} data={consultaData} setData={setConsultaData} tipo={consultaTipo} setTipo={setConsultaTipo} local={consultaLocal} setLocal={setConsultaLocal} observacao={consultaObservacao} setObservacao={setConsultaObservacao} salvar={cadastrarConsulta} />
+    <ModalCuidador visivel={modal === 'cuidador'} fechar={() => setModal(null)} nome={cuidadorNome} setNome={setCuidadorNome} contato={cuidadorContato} setContato={setCuidadorContato} avisos={cuidadorAvisos} setAvisos={setCuidadorAvisos} salvar={salvarCuidador} revogar={estado.cuidador?.consentimentoAtivo ? revogarAutorizacao : undefined} />
   </SafeAreaView>;
 }
 
-function Mais({ consultas, cuidador, abrirConsulta, abrirCuidador }: { consultas: Consulta[]; cuidador?: EstadoApp['cuidador']; abrirConsulta: () => void; abrirCuidador: () => void }) {
-  return <View><Text style={estilos.secundario}>Mais opções</Text><Text style={estilos.titulo}>Cuidados da rotina</Text><Botao texto="Cadastrar consulta ou exame" onPress={abrirConsulta} /><Botao texto="Adicionar cuidador autorizado" variante="suave" onPress={abrirCuidador} /><View style={estilos.cartao}><Text style={estilos.nome}>Cuidador</Text><Text style={estilos.secundario}>{cuidador?.consentimentoAtivo ? `${cuidador.nome} está autorizado neste aparelho.` : 'Nenhum cuidador autorizado.'}</Text></View><View style={estilos.cartao}><Text style={estilos.nome}>Privacidade</Text><Text style={estilos.secundario}>Seus dados ficam neste aparelho. Nenhum aviso externo foi enviado.</Text></View><Text style={[estilos.secundario, { textAlign: 'center', marginTop: 28 }]}>Remédio em Dia · versão MVP</Text></View>;
+function ModalConsulta({ visivel, fechar, titulo, setTitulo, data, setData, tipo, setTipo, local, setLocal, observacao, setObservacao, salvar }: { visivel: boolean; fechar: () => void; titulo: string; setTitulo: (value: string) => void; data: string; setData: (value: string) => void; tipo: 'consulta' | 'exame'; setTipo: (value: 'consulta' | 'exame') => void; local: string; setLocal: (value: string) => void; observacao: string; setObservacao: (value: string) => void; salvar: () => void }) {
+  return <CaixaModal visivel={visivel} fechar={fechar} titulo="Novo compromisso"><ConsultaForm titulo={titulo} setTitulo={setTitulo} data={data} setData={setData} tipo={tipo} setTipo={setTipo} local={local} setLocal={setLocal} observacao={observacao} setObservacao={setObservacao} salvar={salvar} /></CaixaModal>;
 }
 
-function ModalConsulta({ visivel, fechar, titulo, setTitulo, data, setData, tipo, setTipo, salvar }: { visivel: boolean; fechar: () => void; titulo: string; setTitulo: (value: string) => void; data: string; setData: (value: string) => void; tipo: 'consulta' | 'exame'; setTipo: (value: 'consulta' | 'exame') => void; salvar: () => void }) {
-  return <CaixaModal visivel={visivel} fechar={fechar} titulo="Novo compromisso"><View style={estilos.escolhas}><Botao texto="Consulta" variante={tipo === 'consulta' ? 'primario' : 'suave'} onPress={() => setTipo('consulta')} /><Botao texto="Exame" variante={tipo === 'exame' ? 'primario' : 'suave'} onPress={() => setTipo('exame')} /></View><Campo label="Nome" value={titulo} onChangeText={setTitulo} placeholder="Ex.: Retorno com cardiologista" /><Campo label="Data e hora" value={data} onChangeText={setData} placeholder="2026-09-20T14:30" /><Botao texto="Salvar compromisso" onPress={salvar} /></CaixaModal>;
-}
-
-function ModalCuidador({ visivel, fechar, nome, setNome, contato, setContato, salvar }: { visivel: boolean; fechar: () => void; nome: string; setNome: (value: string) => void; contato: string; setContato: (value: string) => void; salvar: () => void }) {
-  return <CaixaModal visivel={visivel} fechar={fechar} titulo="Cuidador autorizado"><Text style={estilos.ajuda}>O compartilhamento exige sua autorização. Nenhum aviso externo foi enviado nesta versão.</Text><Campo label="Nome do cuidador" value={nome} onChangeText={setNome} placeholder="Ex.: Ana" /><Campo label="Contato" value={contato} onChangeText={setContato} placeholder="Telefone ou e-mail" keyboardType="phone-pad" /><Botao texto="Autorizar cuidador" onPress={salvar} /></CaixaModal>;
+function ModalCuidador({ visivel, fechar, nome, setNome, contato, setContato, avisos, setAvisos, salvar, revogar }: { visivel: boolean; fechar: () => void; nome: string; setNome: (value: string) => void; contato: string; setContato: (value: string) => void; avisos: { esquecido: boolean; adiado: boolean; consulta: boolean }; setAvisos: (value: { esquecido: boolean; adiado: boolean; consulta: boolean }) => void; salvar: () => void; revogar?: () => void }) {
+  return <CaixaModal visivel={visivel} fechar={fechar} titulo="Cuidador autorizado"><CuidadorForm nome={nome} setNome={setNome} contato={contato} setContato={setContato} avisos={avisos} setAvisos={setAvisos} salvar={salvar} revogar={revogar} /></CaixaModal>;
 }
