@@ -2,10 +2,8 @@ import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import {
   EstadoApp,
-  atualizarRegistro,
-  criarRegistro,
+  aplicarAcaoNaOcorrencia,
   ocorrenciasDoDia,
-  type Ocorrencia,
 } from './dominio/agenda';
 
 export type FinalidadeNotificacao = 'recorrente' | 'lembrete-24h' | 'lembrete-1h' | 'adiamento' | 'avulso';
@@ -224,29 +222,6 @@ export async function adiarLembrete(nome: string) {
   return agendarAdiantamento(nome);
 }
 
-const encontrarOcorrencia = (estado: EstadoApp, ocorrenciaId: string): { medicamentoId: string; ocorrencia: Ocorrencia } | null => {
-  for (const medicamento of estado.medicamentos) {
-    for (let deslocamento = -1; deslocamento <= 370; deslocamento += 1) {
-      const dia = new Date();
-      dia.setHours(0, 0, 0, 0);
-      dia.setDate(dia.getDate() + deslocamento);
-      const ocorrencia = ocorrenciasDoDia([medicamento], dia).find((item) => item.id === ocorrenciaId);
-      if (ocorrencia) return { medicamentoId: medicamento.id, ocorrencia };
-    }
-  }
-  return null;
-};
-
 export function processarAcaoNotificacao(estado: EstadoApp, ocorrenciaId: string, acao: 'taken' | 'snoozed' | 'missed') {
-  const encontrada = encontrarOcorrencia(estado, ocorrenciaId);
-  if (!encontrada) return estado;
-  const medicamento = estado.medicamentos.find((item) => item.id === encontrada.medicamentoId);
-  if (!medicamento) return estado;
-  const atual = estado.registros.find((registro) => registro.id === ocorrenciaId) ?? criarRegistro(medicamento, encontrada.ocorrencia.previstoPara.slice(0, 10), encontrada.ocorrencia.horario);
-  const atualizado = atualizarRegistro(atual, acao, 'notification');
-  if (atualizado === atual) return estado;
-  const registros = estado.registros.some((registro) => registro.id === atual.id)
-    ? estado.registros.map((registro) => registro.id === atual.id ? atualizado : registro)
-    : [...estado.registros, atualizado];
-  return { ...estado, registros };
+  return aplicarAcaoNaOcorrencia(estado, ocorrenciaId, acao, 'notification');
 }

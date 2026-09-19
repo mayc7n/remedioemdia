@@ -237,3 +237,26 @@ export const atualizarRegistro = (
 ) => registro.estado === 'pendente'
   ? { ...registro, estado, origem, registradoEm: new Date().toISOString() }
   : registro;
+
+export const aplicarAcaoNaOcorrencia = (
+  estado: EstadoApp,
+  ocorrenciaId: string,
+  acao: Exclude<EstadoRegistro, 'pendente'>,
+  origem: OrigemRegistro,
+) => {
+  const medicamento = estado.medicamentos.find((item) => ocorrenciaId.startsWith(`${item.id}-`));
+  if (!medicamento) return estado;
+  const restante = ocorrenciaId.slice(medicamento.id.length + 1);
+  const dia = restante.slice(0, 10);
+  const horario = restante.slice(11);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dia) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(horario)) return estado;
+  const ocorrencia = ocorrenciasDoDia([medicamento], new Date(`${dia}T12:00:00`)).find((item) => item.id === ocorrenciaId);
+  if (!ocorrencia) return estado;
+  const atual = estado.registros.find((registro) => registro.id === ocorrenciaId) ?? criarRegistro(medicamento, dia, horario);
+  const atualizado = atualizarRegistro(atual, acao, origem);
+  if (atualizado === atual) return estado;
+  const registros = estado.registros.some((registro) => registro.id === atual.id)
+    ? estado.registros.map((registro) => registro.id === atual.id ? atualizado : registro)
+    : [...estado.registros, atualizado];
+  return { ...estado, registros };
+};

@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Linking, Pressable, SafeAreaView, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, Platform, Pressable, SafeAreaView, ScrollView, Text, View } from 'react-native';
 import { Botao } from './src/componentes/Botao';
 import { CaixaModal } from './src/componentes/CaixaModal';
 import { Campo } from './src/componentes/Campo';
@@ -10,6 +10,7 @@ import {
   Consulta,
   EstadoApp,
   Medicamento,
+  aplicarAcaoNaOcorrencia,
   atualizarRegistro,
   criarRegistro,
   estadoInicial,
@@ -29,6 +30,8 @@ import { DetalheMedicamento } from './src/telas/DetalheMedicamento';
 import { Mais as MaisTela } from './src/telas/Mais';
 import { Medicamentos } from './src/telas/Medicamentos';
 import { interpretarAcaoWidget } from './src/widget/acoes';
+import { atualizarTimelineWidget, lerEAceitarAcoesDoLedger } from './src/widget/ledger';
+import { atualizarWidgetAndroid, criarSnapshotWidget, type WidgetSnapshot } from './src/widget/estado';
 
 type Aba = 'inicio' | 'medicamentos' | 'historico' | 'mais';
 type ModalAtivo = 'consulta' | 'cuidador' | 'emergencia' | null;
@@ -69,20 +72,38 @@ export default function App() {
     const resultado = sincronizar ? await sincronizarNotificacoesComFuso(proximo) : { estado: proximo, fusoMudou: false, quantidade: 0 };
     setEstado(resultado.estado);
     await salvarEstado(resultado.estado);
+    await atualizarWidgetAndroid(resultado.estado);
   };
 
   useEffect(() => {
     let montado = true;
     (async () => {
       const salvo = await carregarEstado();
-      const resultado = await sincronizarNotificacoesComFuso(salvo);
+      const acoesDoWidget = await lerEAceitarAcoesDoLedger();
+      const comAcoes = acoesDoWidget.reduce((atual, acao) => aplicarAcaoNaOcorrencia(atual, acao.ocorrenciaId, acao.acao, 'widget'), salvo);
+      const resultado = await sincronizarNotificacoesComFuso(comAcoes);
       if (!montado) return;
       setEstado(resultado.estado);
       if (resultado.fusoMudou) await salvarEstado(resultado.estado);
+      await atualizarWidgetAndroid(resultado.estado);
       setCarregando(false);
     })();
     return () => { montado = false; };
   }, []);
+
+  useEffect(() => {
+    if (Platform.OS !== 'ios') return;
+    const snapshot = criarSnapshotWidget(estado);
+    const futuras: Array<{ date: Date; snapshot: WidgetSnapshot }> = [];
+    for (let deslocamento = 1; deslocamento <= 7; deslocamento += 1) {
+      const dia = new Date();
+      dia.setHours(0, 0, 0, 0);
+      dia.setDate(dia.getDate() + deslocamento);
+      const ocorrencia = ocorrenciasDoDia(estado.medicamentos, dia)[0];
+      if (ocorrencia) futuras.push({ date: new Date(ocorrencia.previstoPara), snapshot: { nome: ocorrencia.medicamentoNome, horario: ocorrencia.horario, estado: 'pendente', ocorrenciaId: ocorrencia.id, atualizadoEm: new Date().toISOString() } });
+    }
+    atualizarTimelineWidget(snapshot, futuras);
+  }, [estado.medicamentos, estado.registros]);
 
   const ocorrencias = useMemo(() => ocorrenciasDoDia(estado.medicamentos, hoje()), [estado.medicamentos]);
   const consultasFuturas = estado.consultas.filter((item) => !item.concluida).sort((a, b) => a.marcadoPara.localeCompare(b.marcadoPara));
@@ -102,6 +123,22 @@ export default function App() {
     await persistir({ ...estado, registros });
     if (acao === 'snoozed') await agendarAdiantamento(medicamento.nome, ocorrencia.id);
   };
+
+  useEffect(() => {
+    if (Platform.OS !== 'ios') return;
+    let assinatura: { remove: () => void } | undefined;
+    try {
+      const { addUserInteractionListener } = require('expo-widgets') as typeof import('expo-widgets');
+      assinatura = addUserInteractionListener(({ source, target }: { source: string; target: string }) => {
+        if (source !== 'RemedioWidget' || (target !== 'taken' && target !== 'snoozed')) return;
+        const proximo = ocorrencias.find((item) => !estado.registros.some((registro) => registro.id === item.id && registro.estado !== 'pendente'));
+        if (proximo) void marcar(proximo, target);
+      });
+    } catch {
+      // O módulo só está disponível no development build com o alvo WidgetKit.
+    }
+    return () => assinatura?.remove();
+  }, [estado.registros, ocorrencias]);
 
   useEffect(() => {
     const aplicarUrl = async (url: string | null) => {
