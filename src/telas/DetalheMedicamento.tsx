@@ -4,6 +4,7 @@ import { Medicamento, RegistroMedicamento } from '../dominio/agenda';
 import { Botao } from '../componentes/Botao';
 import { Campo, Rotulo } from '../componentes/Campo';
 import { SeletorFrequencia } from '../componentes/SeletorFrequencia';
+import { HorarioPicker } from '../componentes/HorarioPicker';
 import { cores, estilos } from '../componentes/tema';
 
 type Props = {
@@ -50,7 +51,8 @@ export function DetalheMedicamento({ medicamento, registros, onSalvar, onPausar,
     <Text style={estilos.ajuda}>A observação deve repetir apenas o que foi fornecido pelo seu médico. O app não altera doses.</Text>
     <Campo label="Nome do medicamento" value={nome} onChangeText={setNome} placeholder="Ex.: Remédio da manhã" />
     <Rotulo>Horários</Rotulo>
-    {horarios.map((horario, indice) => <View key={`${indice}-${horario}`} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><View style={{ flex: 1 }}><Campo label={`Horário ${indice + 1}`} value={horario} onChangeText={(valor) => setHorarios((atuais) => atuais.map((atual, atualIndice) => atualIndice === indice ? valor : atual))} placeholder="08:00" keyboardType="numbers-and-punctuation" /></View>{horarios.length > 1 && <Botao texto="Remover" variante="texto" onPress={() => setHorarios((atuais) => atuais.filter((_, atualIndice) => atualIndice !== indice))} accessibilityLabel={`Remover horário ${indice + 1}`} />}</View>)}
+    <Text style={estilos.ajudaCampo}>Escolha horários exatos. O app salva e agenda sempre no formato de 24 horas.</Text>
+    {horarios.map((horario, indice) => <HorarioPicker key={`${indice}-${horario}`} indice={indice} valor={horario} onChange={(valor) => setHorarios((atuais) => atuais.map((atual, atualIndice) => atualIndice === indice ? valor : atual))} remover={horarios.length > 1 ? () => setHorarios((atuais) => atuais.filter((_, atualIndice) => atualIndice !== indice)) : undefined} />)}
     <Botao texto="Adicionar horário" variante="suave" onPress={() => setHorarios((atuais) => [...atuais, '20:00'])} />
     <SeletorFrequencia value={frequencia} onChange={setFrequencia} />
     <Campo label="Observação do médico (opcional)" value={observacao} onChangeText={setObservacao} placeholder="Ex.: conforme orientação recebida" multiline />

@@ -18,6 +18,8 @@ export type MetadadosNotificacao = {
 
 const ORIGEM = 'remedio-em-dia';
 const JANELA_INTERVALO_DIAS = 60;
+export const CATEGORIA_MEDICAMENTO = 'medicamento_acoes';
+export const CANAL_MEDICAMENTOS = 'medicamentos';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -66,9 +68,10 @@ const requestMedicamento = (
   content: {
     title: 'Remédio em Dia',
     body: corpoMedicamento(nome),
+    categoryIdentifier: CATEGORIA_MEDICAMENTO,
     data: metadados('medicamento', medicamentoId, finalidade, ocorrenciaId),
   },
-  trigger,
+  trigger: { ...trigger, channelId: CANAL_MEDICAMENTOS },
 });
 
 const requestConsulta = (
@@ -159,13 +162,26 @@ const requestsConsultas = (estado: EstadoApp, agora: Date) => estado.consultas
     ].filter((request): request is NonNullable<typeof request> => request !== null);
   });
 
-export async function prepararNotificacoes() {
+export async function configurarNotificacoesNativas() {
+  try {
+    await Notifications.setNotificationCategoryAsync(CATEGORIA_MEDICAMENTO, [
+      { identifier: 'taken', buttonTitle: 'Tomei', options: { opensAppToForeground: true } },
+      { identifier: 'snoozed', buttonTitle: 'Adiar 15 min', options: { opensAppToForeground: true } },
+      { identifier: 'missed', buttonTitle: 'Pular', options: { opensAppToForeground: true, isDestructive: true } },
+    ], { previewPlaceholder: 'Lembrete de medicamento' });
+  } catch {
+    // Categorias podem ficar indisponíveis em ambientes de teste ou sem módulo nativo.
+  }
   if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('medicamentos', {
+    await Notifications.setNotificationChannelAsync(CANAL_MEDICAMENTOS, {
       name: 'Lembretes de medicamentos',
       importance: Notifications.AndroidImportance.HIGH,
     });
   }
+}
+
+export async function prepararNotificacoes() {
+  await configurarNotificacoesNativas();
   const permissao = await Notifications.getPermissionsAsync();
   if (!permissao.granted) {
     const solicitada = await Notifications.requestPermissionsAsync();
@@ -232,4 +248,15 @@ export async function adiarLembrete(nome: string) {
 
 export function processarAcaoNotificacao(estado: EstadoApp, ocorrenciaId: string, acao: 'taken' | 'snoozed' | 'missed') {
   return aplicarAcaoNaOcorrencia(estado, ocorrenciaId, acao, 'notification');
+}
+
+export function interpretarRespostaNotificacao(
+  resposta: { actionIdentifier: string; notification: { request: { content: { data?: unknown } } } } | null | undefined,
+): { ocorrenciaId: string; acao: 'taken' | 'snoozed' | 'missed' } | null {
+  if (!resposta) return null;
+  const acao = resposta.actionIdentifier;
+  if (acao !== 'taken' && acao !== 'snoozed' && acao !== 'missed') return null;
+  const data = resposta.notification.request.content.data;
+  if (typeof data !== 'object' || data === null || !('origem' in data) || data.origem !== ORIGEM || !('ocorrenciaId' in data) || typeof data.ocorrenciaId !== 'string' || !data.ocorrenciaId) return null;
+  return { ocorrenciaId: data.ocorrenciaId, acao };
 }

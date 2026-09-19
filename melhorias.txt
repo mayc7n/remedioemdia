@@ -50,3 +50,47 @@ Implementação interrompida após a fundação do domínio: migração v1→v2,
 - Validar fonte ampliada, contraste e foco.
 - Revisar áreas de toque.
 - Preservar suporte a VoiceOver e TalkBack.
+
+STATUS DESTA EXECUÇÃO — 2026-09-19
+
+- Concluído no código: domínio idempotente para IDs com prefixos, ações interativas de notificação, canal Android explícito, resposta de notificação, estado acessível do cuidador, ocorrência exata no widget iOS e extração dos modais do App.tsx.
+- Concluído em testes automatizados: 11 suítes e 41 testes; TypeScript sem erros.
+- Pendente por exigir aparelhos físicos: notificações e widget Android, WidgetKit/iPhone, tela bloqueada, reinício do aparelho, Dynamic Type, safe area, VoiceOver e TalkBack. O roteiro está em `docs/qa-fisico.md`.
+
+PROMPT DE PESQUISA E EXECUÇÃO — PRÓXIMAS MELHORIAS
+
+Analise o app Remédio em Dia como um especialista em React Native, Expo SDK 57, acessibilidade, notificações locais e privacidade em aplicativos de saúde.
+
+Leia primeiro o código existente, este arquivo, README.md, testes e AGENTS.md. Não reescreva o app inteiro e não adicione dependências sem necessidade.
+
+Identifique e implemente a próxima melhoria de maior valor para o usuário, considerando que o app:
+- funciona offline;
+- usa React Native e Expo SDK 57;
+- armazena os dados localmente;
+- possui medicamentos, histórico, consultas, cuidador e widget;
+- não prescreve medicamentos nem oferece diagnóstico.
+
+Priorize melhorias nesta ordem:
+1. confiabilidade das notificações recorrentes;
+2. ações “Tomei”, “Adiar” e “Pular” diretamente na notificação;
+3. histórico compreensível e reversível;
+4. acessibilidade para fonte ampliada, VoiceOver e TalkBack;
+5. privacidade do conteúdo exibido na tela bloqueada;
+6. fluxo explícito e seguro do cuidador;
+7. widget mostrando o próximo medicamento real.
+
+Antes de alterar código:
+- explique o problema encontrado;
+- indique os arquivos que serão alterados;
+- proponha uma solução pequena e compatível com Expo SDK 57;
+- preserve dados existentes e o histórico;
+- mantenha o funcionamento offline;
+- não faça refatorações fora do escopo.
+
+Depois:
+- implemente somente uma melhoria coerente por vez;
+- adicione ou atualize testes;
+- valide com npm test;
+- execute npm run check apenas se esse script existir;
+- informe claramente o que foi testado e o que ainda exige aparelho físico;
+- nunca trate exportação do projeto como substituto de teste real em Android ou iOS.

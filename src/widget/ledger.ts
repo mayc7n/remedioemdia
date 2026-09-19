@@ -1,4 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 import { WidgetSnapshot } from './estado';
 
 export type AcaoLedger = { acao: 'taken' | 'snoozed'; ocorrenciaId: string; criadoEm: string };
@@ -46,6 +48,7 @@ export async function lerEAceitarAcoesDoLedger() {
 }
 
 export function atualizarTimelineWidget(snapshot: WidgetSnapshot, ocorrenciasFuturas: Array<{ date: Date; snapshot: WidgetSnapshot }>) {
+  if (Platform.OS === 'web' || Constants.appOwnership === 'expo') return;
   try {
     const Widget = require('./RemedioWidget.ios').default as { updateTimeline: (entradas: Array<{ date: Date; props: WidgetSnapshot }>) => void };
     Widget.updateTimeline([{ date: new Date(snapshot.atualizadoEm), props: snapshot }, ...ocorrenciasFuturas.map((item) => ({ date: item.date, props: item.snapshot }))]);

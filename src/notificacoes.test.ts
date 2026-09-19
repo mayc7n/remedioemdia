@@ -3,6 +3,7 @@ import { EstadoApp } from './dominio/agenda';
 import {
   agendarAdiantamento,
   prepararNotificacoes,
+  interpretarRespostaNotificacao,
   sincronizarNotificacoes,
   sincronizarNotificacoesComFuso,
 } from './notificacoes';
@@ -16,6 +17,8 @@ jest.mock('expo-notifications', () => ({
   setNotificationHandler: jest.fn(),
   getPermissionsAsync: jest.fn(),
   requestPermissionsAsync: jest.fn(),
+  setNotificationCategoryAsync: jest.fn(),
+  AndroidImportance: { HIGH: 4 },
   getAllScheduledNotificationsAsync: jest.fn(),
   cancelScheduledNotificationAsync: jest.fn(),
   scheduleNotificationAsync: jest.fn(),
@@ -49,6 +52,7 @@ beforeEach(() => {
   (Notifications.scheduleNotificationAsync as jest.Mock).mockImplementation(async (request) => request.identifier ?? 'gerado');
   (Notifications.getPermissionsAsync as jest.Mock).mockResolvedValue({ granted: true });
   (Notifications.requestPermissionsAsync as jest.Mock).mockResolvedValue({ granted: false });
+  (Notifications.setNotificationCategoryAsync as jest.Mock).mockResolvedValue({});
 });
 
 describe('reconciliador de notificações', () => {
@@ -138,6 +142,22 @@ describe('reconciliador de notificações', () => {
     }));
   });
 
+  it('associa ações e canal à notificação de medicamento', async () => {
+    await sincronizarNotificacoes({ ...estadoBase, medicamentos: [medicamento()] }, new Date(2026, 8, 19, 7, 0));
+
+    const request = (Notifications.scheduleNotificationAsync as jest.Mock).mock.calls[0][0];
+    expect(request.content).toEqual(expect.objectContaining({ categoryIdentifier: 'medicamento_acoes' }));
+    expect(request.trigger).toEqual(expect.objectContaining({ channelId: 'medicamentos' }));
+  });
+
+  it('interpreta somente ações conhecidas que tenham uma ocorrência', () => {
+    const resposta = { actionIdentifier: 'taken', notification: { request: { content: { data: { origem: 'remedio-em-dia', ocorrenciaId: 'm1-2026-09-19-08:00' } } } } };
+
+    expect(interpretarRespostaNotificacao(resposta)).toEqual({ ocorrenciaId: 'm1-2026-09-19-08:00', acao: 'taken' });
+    expect(interpretarRespostaNotificacao({ ...resposta, actionIdentifier: 'desconhecida' })).toBeNull();
+    expect(interpretarRespostaNotificacao({ ...resposta, notification: { request: { content: { data: { origem: 'outro-app', ocorrenciaId: 'm1-2026-09-19-08:00' } } } } })).toBeNull();
+  });
+
   it('registra o fuso atual antes de reconciliar', async () => {
     const estado = { ...estadoBase, medicamentos: [medicamento()] };
 
@@ -153,5 +173,15 @@ describe('permissão de notificações', () => {
     (Notifications.getPermissionsAsync as jest.Mock).mockResolvedValue({ granted: false });
     expect(await prepararNotificacoes()).toBe(false);
     expect(Notifications.requestPermissionsAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it('registra a categoria de ações antes da permissão', async () => {
+    await prepararNotificacoes();
+
+    expect(Notifications.setNotificationCategoryAsync).toHaveBeenCalledWith('medicamento_acoes', expect.arrayContaining([
+      expect.objectContaining({ identifier: 'taken', buttonTitle: 'Tomei' }),
+      expect.objectContaining({ identifier: 'snoozed', buttonTitle: 'Adiar 15 min' }),
+      expect.objectContaining({ identifier: 'missed', buttonTitle: 'Pular' }),
+    ]), expect.anything());
   });
 });

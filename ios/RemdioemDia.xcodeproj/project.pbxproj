@@ -11,11 +11,11 @@
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
-		AE13158C395D45F6AB412958 /* index.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4D251BA01094CF4877D26F2 /* index.swift */; };
-		965F6A9B13A948B6881D6976 /* RemedioWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2E73CF5D6D743FDA8F88671 /* RemedioWidget.swift */; };
-		9A0B1577DC31439BA3EFC638 /* ExpoWidgetsTarget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 76CCB663D6E7425EBB2908CF /* ExpoWidgetsTarget.appex */; };
-		847A9763CCC0497EB8E1FB04 /* ExpoWidgetsTarget.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = 9BD95A8517D140DDA94AE52A /* ExpoWidgetsTarget.entitlements */; };
-		DE5ED5BA462542C3BB47FC3B /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = FE5E23AEBC794E78A2B3BA7E /* Info.plist */; };
+		C65C64EE00294DADBD0C1946 /* index.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D8754908E69403CBB05FDF0 /* index.swift */; };
+		996B933DDED14C05B664790A /* RemedioWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72072A949A0A492FB6FE212C /* RemedioWidget.swift */; };
+		7126BB36E44C46468C7C83EE /* ExpoWidgetsTarget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 535066F4F58E4D1A8DE020F2 /* ExpoWidgetsTarget.appex */; };
+		A9E1450B2F894954A5CFACBC /* ExpoWidgetsTarget.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = EBD4326CE43D4D97AF4EBEB2 /* ExpoWidgetsTarget.entitlements */; };
+		D4AE098B556C45C988E0BE12 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = DD7DD04A1C664FD89ED355EA /* Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,11 +27,11 @@
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = RemdioemDia/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* RemdioemDia-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "RemdioemDia-Bridging-Header.h"; path = "RemdioemDia/RemdioemDia-Bridging-Header.h"; sourceTree = "<group>"; };
-		76CCB663D6E7425EBB2908CF /* ExpoWidgetsTarget.appex */ = {isa = PBXFileReference; name = "ExpoWidgetsTarget.appex"; path = "ExpoWidgetsTarget.appex"; sourceTree = BUILT_PRODUCTS_DIR; fileEncoding = undefined; lastKnownFileType = undefined; explicitFileType = wrapper.app-extension; includeInIndex = 0; };
-		A4D251BA01094CF4877D26F2 /* index.swift */ = {isa = PBXFileReference; name = "index.swift"; path = "index.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
-		D2E73CF5D6D743FDA8F88671 /* RemedioWidget.swift */ = {isa = PBXFileReference; name = "RemedioWidget.swift"; path = "RemedioWidget.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
-		9BD95A8517D140DDA94AE52A /* ExpoWidgetsTarget.entitlements */ = {isa = PBXFileReference; name = "ExpoWidgetsTarget.entitlements"; path = "ExpoWidgetsTarget.entitlements"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
-		FE5E23AEBC794E78A2B3BA7E /* Info.plist */ = {isa = PBXFileReference; name = "Info.plist"; path = "Info.plist"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = text.plist.xml; explicitFileType = undefined; includeInIndex = 0; };
+		535066F4F58E4D1A8DE020F2 /* ExpoWidgetsTarget.appex */ = {isa = PBXFileReference; name = "ExpoWidgetsTarget.appex"; path = "ExpoWidgetsTarget.appex"; sourceTree = BUILT_PRODUCTS_DIR; fileEncoding = undefined; lastKnownFileType = undefined; explicitFileType = wrapper.app-extension; includeInIndex = 0; };
+		7D8754908E69403CBB05FDF0 /* index.swift */ = {isa = PBXFileReference; name = "index.swift"; path = "index.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
+		72072A949A0A492FB6FE212C /* RemedioWidget.swift */ = {isa = PBXFileReference; name = "RemedioWidget.swift"; path = "RemedioWidget.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
+		EBD4326CE43D4D97AF4EBEB2 /* ExpoWidgetsTarget.entitlements */ = {isa = PBXFileReference; name = "ExpoWidgetsTarget.entitlements"; path = "ExpoWidgetsTarget.entitlements"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		DD7DD04A1C664FD89ED355EA /* Info.plist */ = {isa = PBXFileReference; name = "Info.plist"; path = "Info.plist"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = text.plist.xml; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -42,7 +42,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		C9D7CE6E67FE473AB7A96C8D /* Frameworks */ = {
+		C27D1B3D0C5A4AD78E40AF5C /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -87,7 +87,7 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				AC0796C317B2474CA146EB22 /* ExpoWidgetsTarget */,
+				9DDF87C1B902418CBFFA8A84 /* ExpoWidgetsTarget */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -98,7 +98,7 @@
 			isa = PBXGroup;
 			children = (
 				13B07F961A680F5B00A75B9A /* RemdioemDia.app */,
-				76CCB663D6E7425EBB2908CF /* ExpoWidgetsTarget.appex */,
+				535066F4F58E4D1A8DE020F2 /* ExpoWidgetsTarget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -112,13 +112,13 @@
 			path = RemdioemDia/Supporting;
 			sourceTree = "<group>";
 		};
-		AC0796C317B2474CA146EB22 /* ExpoWidgetsTarget */ = {
+		9DDF87C1B902418CBFFA8A84 /* ExpoWidgetsTarget */ = {
 			isa = PBXGroup;
 			children = (
-				9BD95A8517D140DDA94AE52A /* ExpoWidgetsTarget.entitlements */,
-				FE5E23AEBC794E78A2B3BA7E /* Info.plist */,
-				A4D251BA01094CF4877D26F2 /* index.swift */,
-				D2E73CF5D6D743FDA8F88671 /* RemedioWidget.swift */,
+				EBD4326CE43D4D97AF4EBEB2 /* ExpoWidgetsTarget.entitlements */,
+				DD7DD04A1C664FD89ED355EA /* Info.plist */,
+				7D8754908E69403CBB05FDF0 /* index.swift */,
+				72072A949A0A492FB6FE212C /* RemedioWidget.swift */,
 			);
 			name = ExpoWidgetsTarget;
 			path = ExpoWidgetsTarget;
@@ -137,28 +137,28 @@
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				CFBE54ADF70F4CC59045FB71 /* Embed Foundation Extensions */,
+				81F897B2655447C3BC0F341A /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				DDC772411F944EE1A69B9289 /* PBXTargetDependency */,
+				F54EDA52ED754D2390D8E14B /* PBXTargetDependency */,
 			);
 			name = RemdioemDia;
 			productName = RemdioemDia;
 			productReference = 13B07F961A680F5B00A75B9A /* RemdioemDia.app */;
 			productType = "com.apple.product-type.application";
 		};
-		251FDC46D8D9426E8581FAB2 /* ExpoWidgetsTarget */ = {
+		A22D7D574413458D8D5CF391 /* ExpoWidgetsTarget */ = {
 			isa = PBXNativeTarget;
 			name = ExpoWidgetsTarget;
 			productName = ExpoWidgetsTarget;
-			productReference = 76CCB663D6E7425EBB2908CF;
+			productReference = 535066F4F58E4D1A8DE020F2;
 			productType = "com.apple.product-type.app-extension";
-			buildConfigurationList = 58BA863D59F846D099E21800;
+			buildConfigurationList = FEFA3052964448E5BA3B462E;
 			buildPhases = (
-				E0473E835D1F42D28CF20BCF /* Sources */,
-				C9D7CE6E67FE473AB7A96C8D /* Frameworks */,
+				EEA1EF9385734FEE841B3A6E /* Sources */,
+				C27D1B3D0C5A4AD78E40AF5C /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -176,7 +176,7 @@
 					13B07F861A680F5B00A75B9A = {
 						LastSwiftMigration = 1250;
 					};
-					251FDC46D8D9426E8581FAB2 = {
+					A22D7D574413458D8D5CF391 = {
 						LastSwiftMigration = 1250;
 					};
 				};
@@ -195,7 +195,7 @@
 			projectRoot = "";
 			targets = (
 				13B07F861A680F5B00A75B9A /* RemdioemDia */,
-				251FDC46D8D9426E8581FAB2 /* ExpoWidgetsTarget */,
+				A22D7D574413458D8D5CF391 /* ExpoWidgetsTarget */,
 			);
 		};
 /* End PBXProject section */
@@ -286,12 +286,12 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		E0473E835D1F42D28CF20BCF /* Sources */ = {
+		EEA1EF9385734FEE841B3A6E /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AE13158C395D45F6AB412958 /* index.swift in Sources */,
-				965F6A9B13A948B6881D6976 /* RemedioWidget.swift in Sources */,
+				C65C64EE00294DADBD0C1946 /* index.swift in Sources */,
+				996B933DDED14C05B664790A /* RemedioWidget.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -473,7 +473,7 @@
 			};
 			name = Release;
 		};
-		BB6FB5F7A15849F2B7731D16 /* Debug */ = {
+		5857F248F1364207B996D64C /* Debug */ = {
 			name = Debug;
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -493,7 +493,7 @@
 				APPLICATION_EXTENSION_API_ONLY = "YES";
 			};
 		};
-		2242CCCD2A5645779E352E11 /* Release */ = {
+		CE72AC076DC8453ABAB83D36 /* Release */ = {
 			name = Release;
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -534,11 +534,11 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		58BA863D59F846D099E21800 /* Build configuration list for PBXNativeTarget "ExpoWidgetsTarget" */ = {
+		FEFA3052964448E5BA3B462E /* Build configuration list for PBXNativeTarget "ExpoWidgetsTarget" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				BB6FB5F7A15849F2B7731D16 /* Debug */,
-				2242CCCD2A5645779E352E11 /* Release */,
+				5857F248F1364207B996D64C /* Debug */,
+				CE72AC076DC8453ABAB83D36 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -546,29 +546,29 @@
 /* End XCConfigurationList section */
 
 /* Begin PBXTargetDependency section */
-		DDC772411F944EE1A69B9289 /* PBXTargetDependency */ = {
+		F54EDA52ED754D2390D8E14B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 251FDC46D8D9426E8581FAB2 /* ExpoWidgetsTarget */;
-			targetProxy = 0E1C9D14373B4D4E92F4E70A /* PBXContainerItemProxy */;
+			target = A22D7D574413458D8D5CF391 /* ExpoWidgetsTarget */;
+			targetProxy = 1ABDA75FC9814B7DBDF33636 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin PBXContainerItemProxy section */
-		0E1C9D14373B4D4E92F4E70A /* PBXContainerItemProxy */ = {
+		1ABDA75FC9814B7DBDF33636 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 251FDC46D8D9426E8581FAB2;
+			remoteGlobalIDString = A22D7D574413458D8D5CF391;
 			remoteInfo = ExpoWidgetsTarget;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		CFBE54ADF70F4CC59045FB71 /* Embed Foundation Extensions */ = {
+		81F897B2655447C3BC0F341A /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9A0B1577DC31439BA3EFC638 /* ExpoWidgetsTarget.appex in Embed Foundation Extensions */,
+				7126BB36E44C46468C7C83EE /* ExpoWidgetsTarget.appex in Embed Foundation Extensions */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			name = "Embed Foundation Extensions";

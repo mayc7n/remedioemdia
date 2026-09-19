@@ -1,9 +1,8 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Linking, Platform, Pressable, SafeAreaView, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, Platform, ScrollView, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Botao } from './src/componentes/Botao';
-import { CaixaModal } from './src/componentes/CaixaModal';
-import { Campo } from './src/componentes/Campo';
 import { Navegacao } from './src/componentes/Navegacao';
 import { cores, estilos } from './src/componentes/tema';
 import { carregarEstado, salvarEstado } from './src/dados/armazenamento';
@@ -15,22 +14,26 @@ import {
   atualizarRegistro,
   criarRegistro,
   estadoInicial,
+  ocorrenciaPorId,
   ocorrenciasDoDia,
 } from './src/dominio/agenda';
 import {
   agendarAdiantamento,
+  configurarNotificacoesNativas,
+  interpretarRespostaNotificacao,
   prepararNotificacoes,
+  processarAcaoNotificacao,
   sincronizarNotificacoesComFuso,
 } from './src/notificacoes';
+import * as Notifications from 'expo-notifications';
 import { salvarCuidadorComConsentimento, revogarCuidador } from './src/cuidador';
-import { ConsultaForm } from './src/telas/ConsultaForm';
-import { CuidadorForm } from './src/telas/CuidadorForm';
 import { Historico } from './src/telas/Historico';
 import { Inicio } from './src/telas/Inicio';
 import { DetalheMedicamento } from './src/telas/DetalheMedicamento';
 import { Mais as MaisTela } from './src/telas/Mais';
 import { Medicamentos } from './src/telas/Medicamentos';
-import { interpretarAcaoWidget } from './src/widget/acoes';
+import { ModalConsulta, ModalCuidador } from './src/telas/Modais';
+import { interpretarAcaoWidget, interpretarAlvoWidget } from './src/widget/acoes';
 import { atualizarTimelineWidget, lerEAceitarAcoesDoLedger } from './src/widget/ledger';
 import { atualizarWidgetAndroid, criarSnapshotWidget, type WidgetSnapshot } from './src/widget/estado';
 
@@ -82,6 +85,7 @@ export default function App() {
       const salvo = await carregarEstado();
       const acoesDoWidget = await lerEAceitarAcoesDoLedger();
       const comAcoes = acoesDoWidget.reduce((atual, acao) => aplicarAcaoNaOcorrencia(atual, acao.ocorrenciaId, acao.acao, 'widget'), salvo);
+      await configurarNotificacoesNativas();
       const resultado = await sincronizarNotificacoesComFuso(comAcoes);
       if (!montado) return;
       setEstado(resultado.estado);
@@ -131,15 +135,31 @@ export default function App() {
     try {
       const { addUserInteractionListener } = require('expo-widgets') as typeof import('expo-widgets');
       assinatura = addUserInteractionListener(({ source, target }: { source: string; target: string }) => {
-        if (source !== 'RemedioWidget' || (target !== 'taken' && target !== 'snoozed')) return;
-        const proximo = ocorrencias.find((item) => !estado.registros.some((registro) => registro.id === item.id && registro.estado !== 'pendente'));
-        if (proximo) void marcar(proximo, target);
+        if (source !== 'RemedioWidget') return;
+        const alvo = interpretarAlvoWidget(target);
+        const proximo = alvo ? ocorrenciaPorId(estado.medicamentos, alvo.ocorrenciaId) : null;
+        if (proximo && alvo) void marcar(proximo, alvo.acao);
       });
     } catch {
       // O módulo só está disponível no development build com o alvo WidgetKit.
     }
     return () => assinatura?.remove();
   }, [estado.registros, ocorrencias]);
+
+  useEffect(() => {
+    const assinatura = Notifications.addNotificationResponseReceivedListener((resposta) => {
+      const acao = interpretarRespostaNotificacao(resposta);
+      if (!acao) return;
+      const ocorrencia = ocorrenciaPorId(estado.medicamentos, acao.ocorrenciaId);
+      const medicamento = ocorrencia ? estado.medicamentos.find((item) => item.id === ocorrencia.medicamentoId) : undefined;
+      const proximo = processarAcaoNotificacao(estado, acao.ocorrenciaId, acao.acao);
+      if (proximo === estado) return;
+      void persistir(proximo).then(async () => {
+        if (acao.acao === 'snoozed' && medicamento) await agendarAdiantamento(medicamento.nome, acao.ocorrenciaId);
+      });
+    });
+    return () => assinatura.remove();
+  }, [estado]);
 
   useEffect(() => {
     const aplicarUrl = async (url: string | null) => {
@@ -155,9 +175,10 @@ export default function App() {
   }, [estado.registros, ocorrencias]);
 
   const salvarMedicamento = async (rascunho: Medicamento) => {
+    const novo = rascunho.id === 'novo';
+    if (novo) await prepararNotificacoes();
     const proximo = atualizarAgenda(estado, rascunho);
     await persistir(proximo);
-    if (rascunho.id === 'novo') await prepararNotificacoes();
     setMedicamentoAberto(null);
   };
 
@@ -174,7 +195,7 @@ export default function App() {
 
   const cadastrarConsulta = async () => {
     if (!consultaTitulo.trim() || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(consultaData)) {
-      Alert.alert('Confira os dados', 'Use a data e hora no formato 2026-09-20T14:30.');
+      Alert.alert('Confira os dados', 'Escolha uma data e hora no formato brasileiro: 20/09/2026 às 14:30.');
       return;
     }
     const nova: Consulta = { id: idNovo(), tipo: consultaTipo, titulo: consultaTitulo.trim(), marcadoPara: consultaData, local: consultaLocal.trim() || undefined, observacao: consultaObservacao.trim() || undefined, lembretes: true, concluida: false };
@@ -233,12 +254,4 @@ export default function App() {
     <ModalConsulta visivel={modal === 'consulta'} fechar={() => setModal(null)} titulo={consultaTitulo} setTitulo={setConsultaTitulo} data={consultaData} setData={setConsultaData} tipo={consultaTipo} setTipo={setConsultaTipo} local={consultaLocal} setLocal={setConsultaLocal} observacao={consultaObservacao} setObservacao={setConsultaObservacao} salvar={cadastrarConsulta} />
     <ModalCuidador visivel={modal === 'cuidador'} fechar={() => setModal(null)} nome={cuidadorNome} setNome={setCuidadorNome} contato={cuidadorContato} setContato={setCuidadorContato} avisos={cuidadorAvisos} setAvisos={setCuidadorAvisos} salvar={salvarCuidador} revogar={estado.cuidador?.consentimentoAtivo ? revogarAutorizacao : undefined} />
   </SafeAreaView>;
-}
-
-function ModalConsulta({ visivel, fechar, titulo, setTitulo, data, setData, tipo, setTipo, local, setLocal, observacao, setObservacao, salvar }: { visivel: boolean; fechar: () => void; titulo: string; setTitulo: (value: string) => void; data: string; setData: (value: string) => void; tipo: 'consulta' | 'exame'; setTipo: (value: 'consulta' | 'exame') => void; local: string; setLocal: (value: string) => void; observacao: string; setObservacao: (value: string) => void; salvar: () => void }) {
-  return <CaixaModal visivel={visivel} fechar={fechar} titulo="Novo compromisso"><ConsultaForm titulo={titulo} setTitulo={setTitulo} data={data} setData={setData} tipo={tipo} setTipo={setTipo} local={local} setLocal={setLocal} observacao={observacao} setObservacao={setObservacao} salvar={salvar} /></CaixaModal>;
-}
-
-function ModalCuidador({ visivel, fechar, nome, setNome, contato, setContato, avisos, setAvisos, salvar, revogar }: { visivel: boolean; fechar: () => void; nome: string; setNome: (value: string) => void; contato: string; setContato: (value: string) => void; avisos: { esquecido: boolean; adiado: boolean; consulta: boolean }; setAvisos: (value: { esquecido: boolean; adiado: boolean; consulta: boolean }) => void; salvar: () => void; revogar?: () => void }) {
-  return <CaixaModal visivel={visivel} fechar={fechar} titulo="Cuidador autorizado"><CuidadorForm nome={nome} setNome={setNome} contato={contato} setContato={setContato} avisos={avisos} setAvisos={setAvisos} salvar={salvar} revogar={revogar} /></CaixaModal>;
 }

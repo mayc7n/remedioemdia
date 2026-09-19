@@ -5,6 +5,21 @@ import { DetalheMedicamento } from './DetalheMedicamento';
 import { Historico } from './Historico';
 import { Medicamentos } from './Medicamentos';
 
+let mockHora = 9;
+
+jest.mock('@react-native-community/datetimepicker', () => {
+  const React = require('react');
+  const { Pressable, Text } = require('react-native');
+  return {
+    __esModule: true,
+    default: ({ onChange }: { onChange: (evento: { type: 'set' }, data: Date) => void }) => React.createElement(
+      Pressable,
+      { accessibilityRole: 'button', accessibilityLabel: 'Mock seletor de horário', onPress: () => onChange({ type: 'set' }, new Date(2026, 8, 19, mockHora, 0)) },
+      React.createElement(Text, null, 'Mock seletor de horário'),
+    ),
+  };
+});
+
 const medicamento: Medicamento = {
   id: 'm1',
   nome: 'Remédio da manhã',
@@ -27,6 +42,20 @@ const registro: RegistroMedicamento = {
 };
 
 describe('fluxo de medicamentos', () => {
+  it('oferece um seletor nativo para cada horário', async () => {
+    const tela = await render(
+      <DetalheMedicamento
+        medicamento={{ ...medicamento, horarios: ['08:00'] }}
+        registros={[]}
+        onSalvar={jest.fn()}
+        onPausar={jest.fn()}
+        onExcluir={jest.fn()}
+      />,
+    );
+
+    expect(tela.getByRole('button', { name: 'Escolher horário 1' })).toBeTruthy();
+  });
+
   it('abre o detalhe pelo cartão com label acessível', async () => {
     const abrirDetalhe = jest.fn();
     const tela = await render(<Medicamentos medicamentos={[medicamento]} abrirDetalhe={abrirDetalhe} abrirNovo={jest.fn()} />);
@@ -54,9 +83,17 @@ describe('fluxo de medicamentos', () => {
       />,
     );
 
-    await fireEvent.changeText(detalhe.getByLabelText('Horário 1'), '09:00');
+    mockHora = 9;
+    await fireEvent.press(detalhe.getByRole('button', { name: 'Escolher horário 1' }));
+    await fireEvent.press(detalhe.getByRole('button', { name: 'Mock seletor de horário' }));
+    const confirmarPrimeiro = detalhe.queryByRole('button', { name: 'Usar este horário' });
+    if (confirmarPrimeiro) await fireEvent.press(confirmarPrimeiro);
     await fireEvent.press(detalhe.getByRole('button', { name: 'Adicionar horário' }));
-    await fireEvent.changeText(detalhe.getByLabelText('Horário 2'), '20:00');
+    mockHora = 20;
+    await fireEvent.press(detalhe.getByRole('button', { name: 'Escolher horário 2' }));
+    await fireEvent.press(detalhe.getByRole('button', { name: 'Mock seletor de horário' }));
+    const confirmarSegundo = detalhe.queryByRole('button', { name: 'Usar este horário' });
+    if (confirmarSegundo) await fireEvent.press(confirmarSegundo);
     await fireEvent.press(detalhe.getByRole('button', { name: 'Salvar medicamento' }));
     await fireEvent.press(detalhe.getByRole('button', { name: 'Pausar lembretes' }));
     await fireEvent.press(detalhe.getByRole('button', { name: 'Excluir medicamento' }));

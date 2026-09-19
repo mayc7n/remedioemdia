@@ -208,6 +208,18 @@ export const ocorrenciasDoDia = (medicamentos: Medicamento[], data: Date) => {
 
 export type Ocorrencia = ReturnType<typeof ocorrenciasDoDia>[number];
 
+export const ocorrenciaPorId = (medicamentos: Medicamento[], ocorrenciaId: string): Ocorrencia | null => {
+  const medicamento = [...medicamentos]
+    .filter((item) => ocorrenciaId.startsWith(`${item.id}-`))
+    .sort((a, b) => b.id.length - a.id.length)[0];
+  if (!medicamento) return null;
+  const restante = ocorrenciaId.slice(medicamento.id.length + 1);
+  const dia = restante.slice(0, 10);
+  const horario = restante.slice(11);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dia) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(horario)) return null;
+  return ocorrenciasDoDia([medicamento], new Date(`${dia}T12:00:00`)).find((item) => item.id === ocorrenciaId) ?? null;
+};
+
 export const proximaOcorrencia = (medicamentos: Medicamento[], aPartirDe: Date): Ocorrencia | null => {
   if (!Number.isFinite(aPartirDe.getTime())) return null;
   for (let deslocamento = 0; deslocamento <= 370; deslocamento += 1) {
@@ -244,13 +256,14 @@ export const aplicarAcaoNaOcorrencia = (
   acao: Exclude<EstadoRegistro, 'pendente'>,
   origem: OrigemRegistro,
 ) => {
-  const medicamento = estado.medicamentos.find((item) => ocorrenciaId.startsWith(`${item.id}-`));
+  const medicamento = [...estado.medicamentos]
+    .filter((item) => ocorrenciaId.startsWith(`${item.id}-`))
+    .sort((a, b) => b.id.length - a.id.length)[0];
   if (!medicamento) return estado;
   const restante = ocorrenciaId.slice(medicamento.id.length + 1);
   const dia = restante.slice(0, 10);
   const horario = restante.slice(11);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dia) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(horario)) return estado;
-  const ocorrencia = ocorrenciasDoDia([medicamento], new Date(`${dia}T12:00:00`)).find((item) => item.id === ocorrenciaId);
+  const ocorrencia = ocorrenciaPorId([medicamento], ocorrenciaId);
   if (!ocorrencia) return estado;
   const atual = estado.registros.find((registro) => registro.id === ocorrenciaId) ?? criarRegistro(medicamento, dia, horario);
   const atualizado = atualizarRegistro(atual, acao, origem);

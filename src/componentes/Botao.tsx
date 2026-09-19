@@ -1,4 +1,4 @@
-import { Pressable, Text } from 'react-native';
+import { Pressable, Text, type AccessibilityState } from 'react-native';
 import { estilos } from './tema';
 
 export type VarianteBotao = 'primario' | 'suave' | 'perigo' | 'texto';
@@ -9,9 +9,11 @@ type Props = {
   variante?: VarianteBotao;
   desativado?: boolean;
   accessibilityLabel?: string;
+  accessibilityHint?: string;
+  accessibilityState?: Omit<AccessibilityState, 'disabled'>;
 };
 
-export function Botao({ texto, onPress, variante = 'primario', desativado = false, accessibilityLabel = texto }: Props) {
+export function Botao({ texto, onPress, variante = 'primario', desativado = false, accessibilityLabel = texto, accessibilityHint, accessibilityState }: Props) {
   const estiloVariante = variante === 'primario'
     ? estilos.botaoPrimario
     : variante === 'suave'
@@ -23,7 +25,8 @@ export function Botao({ texto, onPress, variante = 'primario', desativado = fals
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
-      accessibilityState={{ disabled: desativado }}
+      accessibilityHint={accessibilityHint}
+      accessibilityState={{ disabled: desativado, ...accessibilityState }}
       disabled={desativado}
       onPress={onPress}
       style={({ pressed }) => [estilos.botao, estiloVariante, pressed && estilos.pressionado, desativado && estilos.desativado]}

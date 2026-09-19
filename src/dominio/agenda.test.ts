@@ -1,4 +1,4 @@
-import { criarRegistro, normalizarEstado, ocorrenciasDoDia, proximaOcorrencia, atualizarRegistro, type EstadoApp, type Medicamento } from './agenda';
+import { aplicarAcaoNaOcorrencia, criarRegistro, normalizarEstado, ocorrenciaPorId, ocorrenciasDoDia, proximaOcorrencia, atualizarRegistro, type EstadoApp, type Medicamento } from './agenda';
 
 describe('agenda de medicamentos', () => {
   it('gera ocorrências diárias em ordem de horário', () => {
@@ -101,5 +101,27 @@ describe('agenda de medicamentos', () => {
     };
 
     expect(proximaOcorrencia([medicamento], new Date(2026, 8, 18, 9, 0))).toMatchObject({ horario: '20:00' });
+  });
+
+  it('aplica a ação ao medicamento correto quando um ID é prefixo de outro', () => {
+    const medicamentos: Medicamento[] = [
+      { id: 'm1', nome: 'Primeiro', horarios: ['08:00'], frequencia: { tipo: 'diaria' }, situacao: 'ativo', criadoEm: '2026-09-18T00:00:00.000Z', atualizadoEm: '2026-09-18T00:00:00.000Z' },
+      { id: 'm1-extra', nome: 'Segundo', horarios: ['09:00'], frequencia: { tipo: 'diaria' }, situacao: 'ativo', criadoEm: '2026-09-18T00:00:00.000Z', atualizadoEm: '2026-09-18T00:00:00.000Z' },
+    ];
+    const estado: EstadoApp = { versao: 2, concluiuBoasVindas: true, medicamentos, registros: [], consultas: [] };
+
+    const atualizado = aplicarAcaoNaOcorrencia(estado, 'm1-extra-2026-09-18-09:00', 'taken', 'app');
+
+    expect(atualizado.registros).toHaveLength(1);
+    expect(atualizado.registros[0]).toMatchObject({ medicamentoId: 'm1-extra', medicamentoNome: 'Segundo', estado: 'taken' });
+  });
+
+  it('encontra uma ocorrência futura da timeline pelo ID completo', () => {
+    const medicamento: Medicamento = {
+      id: 'm1', nome: 'Remédio', horarios: ['08:00'], frequencia: { tipo: 'diaria' }, situacao: 'ativo',
+      criadoEm: '2026-09-18T00:00:00.000Z', atualizadoEm: '2026-09-18T00:00:00.000Z',
+    };
+
+    expect(ocorrenciaPorId([medicamento], 'm1-2026-09-25-08:00')).toMatchObject({ medicamentoId: 'm1', horario: '08:00' });
   });
 });

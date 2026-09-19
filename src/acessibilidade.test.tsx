@@ -30,6 +30,8 @@ describe('acessibilidade dos fluxos críticos', () => {
     const cuidador = await render(<CuidadorForm nome="" setNome={jest.fn()} contato="" setContato={jest.fn()} avisos={{ esquecido: true, adiado: false, consulta: true }} setAvisos={jest.fn()} salvar={jest.fn()} />);
     expect(cuidador.getByRole('button', { name: 'Medicamento esquecido' })).toBeTruthy();
     expect(cuidador.getByRole('button', { name: 'Consulta próxima' })).toBeTruthy();
+    expect(cuidador.getByRole('button', { name: 'Medicamento esquecido' }).props.accessibilityState).toEqual(expect.objectContaining({ disabled: false, selected: true }));
+    expect(cuidador.getByRole('button', { name: 'Medicamento adiado' }).props.accessibilityState).toEqual(expect.objectContaining({ disabled: false, selected: false }));
   });
 
   it('expõe a aba ativa pelo estado de acessibilidade', async () => {

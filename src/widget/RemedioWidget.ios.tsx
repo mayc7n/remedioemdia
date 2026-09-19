@@ -21,8 +21,8 @@ function RemedioWidget(snapshot: WidgetSnapshot) {
       <Text>{snapshot.nome}</Text>
       <Text>{snapshot.horario} · {textoEstado(snapshot.estado)}</Text>
       {snapshot.ocorrenciaId && <>
-        <Button label="Tomei" target="taken" onPress={() => proximoEstado('taken')} />
-        <Button label="Adiar 15 min" target="snoozed" onPress={() => proximoEstado('snoozed')} />
+        <Button label="Tomei" target={`taken:${encodeURIComponent(snapshot.ocorrenciaId)}`} onPress={() => proximoEstado('taken')} />
+        <Button label="Adiar 15 min" target={`snoozed:${encodeURIComponent(snapshot.ocorrenciaId)}`} onPress={() => proximoEstado('snoozed')} />
       </>}
     </VStack>
   );

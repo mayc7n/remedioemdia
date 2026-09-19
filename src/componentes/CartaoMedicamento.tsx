@@ -8,16 +8,15 @@ export function CartaoMedicamento({ medicamento, abrir }: { medicamento: Medicam
     : medicamento.frequencia.tipo === 'diasDaSemana'
       ? 'dias selecionados'
       : `a cada ${medicamento.frequencia.aCadaDias} dias`;
-  return (
-    <Pressable accessibilityRole="button" accessibilityLabel={`Abrir medicamento ${medicamento.nome}`} onPress={abrir} style={({ pressed }) => [estilos.cartao, pressed && estilos.pressionado]}>
-      <View style={estilos.linhaEntre}>
-        <View style={estilos.flexivel}>
-          <Text style={estilos.nome}>{medicamento.nome}</Text>
-          <Text style={estilos.secundario}>{medicamento.horarios.join(' · ')} · {frequencia}</Text>
-        </View>
-        <Text style={estilos.secundario}>{medicamento.situacao === 'ativo' ? 'Ativo' : medicamento.situacao === 'pausado' ? 'Pausado' : 'Excluído'}</Text>
-      </View>
-      {medicamento.observacao && <Text style={estilos.secundario}>{medicamento.observacao}</Text>}
-    </Pressable>
-  );
+  const situacao = medicamento.situacao === 'ativo' ? 'Ativo' : medicamento.situacao === 'pausado' ? 'Pausado' : 'Excluído';
+
+  return <Pressable accessibilityRole="button" accessibilityLabel={`Abrir medicamento ${medicamento.nome}`} accessibilityHint="Abre os detalhes e os horários" onPress={abrir} style={({ pressed }) => [estilos.medicamentoItem, pressed && estilos.pressionado]}>
+    <View style={[estilos.statusMarcador, medicamento.situacao !== 'ativo' && estilos.statusMarcadorPausado]} />
+    <View style={estilos.flexivel}>
+      <View style={estilos.linhaEntre}><Text style={estilos.nome}>{medicamento.nome}</Text><Text style={estilos.seta}>›</Text></View>
+      <Text style={estilos.horariosLista}>{medicamento.horarios.join('  ·  ')}</Text>
+      <Text style={estilos.secundario}>{frequencia} · {situacao}</Text>
+      {medicamento.observacao && <Text style={estilos.observacaoLista}>{medicamento.observacao}</Text>}
+    </View>
+  </Pressable>;
 }
