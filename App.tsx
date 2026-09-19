@@ -4,6 +4,7 @@ import { ActivityIndicator, Alert, Linking, Platform, Pressable, SafeAreaView, S
 import { Botao } from './src/componentes/Botao';
 import { CaixaModal } from './src/componentes/CaixaModal';
 import { Campo } from './src/componentes/Campo';
+import { Navegacao } from './src/componentes/Navegacao';
 import { cores, estilos } from './src/componentes/tema';
 import { carregarEstado, salvarEstado } from './src/dados/armazenamento';
 import {
@@ -228,9 +229,7 @@ export default function App() {
       {aba === 'historico' && <Historico registros={estado.registros} />}
       {aba === 'mais' && <MaisTela consultas={consultasFuturas} cuidador={estado.cuidador} abrirConsulta={() => setModal('consulta')} abrirCuidador={() => setModal('cuidador')} concluirConsulta={concluirConsulta} excluirConsulta={excluirConsulta} />}
     </ScrollView>
-    <View style={{ position: 'absolute', left: 12, right: 12, bottom: 12, backgroundColor: cores.texto, borderRadius: 20, flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 8 }}>
-      {([['inicio', 'Hoje'], ['medicamentos', 'Remédios'], ['historico', 'Histórico'], ['mais', 'Mais']] as [Aba, string][]).map(([chave, texto]) => <Pressable key={chave} accessibilityRole="tab" accessibilityState={{ selected: aba === chave }} onPress={() => setAba(chave)} style={{ alignItems: 'center', minWidth: 70, minHeight: 48, justifyContent: 'center' }}><Text style={{ color: aba === chave ? cores.branco : '#A9B7B0', fontSize: 12, fontWeight: '700' }}>{texto}</Text></Pressable>)}
-    </View>
+    <Navegacao aba={aba} onChange={setAba} />
     <ModalConsulta visivel={modal === 'consulta'} fechar={() => setModal(null)} titulo={consultaTitulo} setTitulo={setConsultaTitulo} data={consultaData} setData={setConsultaData} tipo={consultaTipo} setTipo={setConsultaTipo} local={consultaLocal} setLocal={setConsultaLocal} observacao={consultaObservacao} setObservacao={setConsultaObservacao} salvar={cadastrarConsulta} />
     <ModalCuidador visivel={modal === 'cuidador'} fechar={() => setModal(null)} nome={cuidadorNome} setNome={setCuidadorNome} contato={cuidadorContato} setContato={setCuidadorContato} avisos={cuidadorAvisos} setAvisos={setCuidadorAvisos} salvar={salvarCuidador} revogar={estado.cuidador?.consentimentoAtivo ? revogarAutorizacao : undefined} />
   </SafeAreaView>;
