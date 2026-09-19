@@ -41,6 +41,7 @@ ios/Pods/
 
 # Material interno e temporário
 docs/
+.worktrees/
 tmp/
 *.orig
 .DS_Store
