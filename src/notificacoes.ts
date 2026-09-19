@@ -92,6 +92,11 @@ const ehNotificacaoDoApp = (request: Notifications.NotificationRequest) => {
   return typeof data === 'object' && data !== null && 'origem' in data && data.origem === ORIGEM;
 };
 
+const ehAdiamento = (request: Notifications.NotificationRequest) => {
+  const data = request.content.data;
+  return typeof data === 'object' && data !== null && 'finalidade' in data && data.finalidade === 'adiamento';
+};
+
 const agendar = async (request: Notifications.NotificationRequestInput) => {
   await Notifications.scheduleNotificationAsync(request);
 };
@@ -171,7 +176,10 @@ export async function prepararNotificacoes() {
 
 export async function sincronizarNotificacoes(estado: EstadoApp, agora = new Date()) {
   const agendadas = await Notifications.getAllScheduledNotificationsAsync();
-  await Promise.all(agendadas.filter(ehNotificacaoDoApp).map(({ identifier }) => Notifications.cancelScheduledNotificationAsync(identifier)));
+  await Promise.all(agendadas
+    .filter(ehNotificacaoDoApp)
+    .filter((request) => !ehAdiamento(request))
+    .map(({ identifier }) => Notifications.cancelScheduledNotificationAsync(identifier)));
 
   const requests = [...requestsMedicamentos(estado, agora), ...requestsConsultas(estado, agora)];
   await Promise.all(requests.map(agendar));

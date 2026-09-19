@@ -67,6 +67,16 @@ describe('reconciliador de notificações', () => {
     expect(segundaRodada).toEqual(primeiraRodada);
   });
 
+  it('preserva um adiamento próprio já agendado durante a reconciliação', async () => {
+    (Notifications.getAllScheduledNotificationsAsync as jest.Mock).mockResolvedValue([
+      { identifier: 'adiamento-pendente', content: { data: { origem: 'remedio-em-dia', finalidade: 'adiamento' } } },
+    ]);
+
+    await sincronizarNotificacoes(estadoBase, new Date(2026, 8, 19, 7, 0));
+
+    expect(Notifications.cancelScheduledNotificationAsync).not.toHaveBeenCalledWith('adiamento-pendente');
+  });
+
   it('agenda dias da semana e intervalo como recorrências locais', async () => {
     const estado = {
       ...estadoBase,
