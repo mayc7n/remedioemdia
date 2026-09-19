@@ -1,0 +1,42 @@
+import { StyleSheet } from 'react-native';
+
+export const cores = {
+  fundo: '#F7F5F0',
+  texto: '#24312E',
+  verde: '#2F6B58',
+  verdeClaro: '#E4EFE8',
+  borda: '#D8DED8',
+  mutado: '#71807A',
+  ambar: '#B26A27',
+  ambarClaro: '#F6EBDD',
+  vermelho: '#B84C45',
+  vermelhoClaro: '#F8E7E5',
+  branco: '#FFFFFF',
+};
+
+export const estilos = StyleSheet.create({
+  botao: { minHeight: 48, borderRadius: 13, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center', marginTop: 10 },
+  botaoPrimario: { backgroundColor: cores.verde },
+  botaoSuave: { backgroundColor: cores.verdeClaro },
+  botaoPerigo: { backgroundColor: cores.vermelhoClaro, borderWidth: 1, borderColor: '#E5B7B2' },
+  botaoTexto: { backgroundColor: 'transparent', paddingHorizontal: 5 },
+  textoBotao: { color: cores.branco, fontSize: 15, fontWeight: '800' },
+  textoBotaoSuave: { color: cores.texto },
+  textoBotaoTexto: { color: cores.ambar, textDecorationLine: 'underline' },
+  pressionado: { opacity: 0.7 },
+  desativado: { opacity: 0.45 },
+  campo: { marginTop: 18 },
+  label: { color: cores.texto, fontSize: 15, fontWeight: '800', marginBottom: 7 },
+  input: { minHeight: 52, borderWidth: 1, borderColor: cores.borda, borderRadius: 13, backgroundColor: cores.branco, paddingHorizontal: 14, color: cores.texto, fontSize: 17 },
+  cartao: { backgroundColor: cores.branco, borderRadius: 18, padding: 17, marginBottom: 12, borderWidth: 1, borderColor: cores.borda },
+  linhaEntre: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 },
+  flexivel: { flex: 1 },
+  titulo: { color: cores.texto, fontSize: 23, fontWeight: '800', marginTop: 27, marginBottom: 12 },
+  lead: { color: cores.mutado, fontSize: 17, lineHeight: 25, marginBottom: 18 },
+  nome: { color: cores.texto, fontSize: 19, fontWeight: '800' },
+  secundario: { color: cores.mutado, fontSize: 15, lineHeight: 22 },
+  ajuda: { color: cores.mutado, fontSize: 15, lineHeight: 22, marginVertical: 14 },
+  escolhas: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
+  selecionado: { borderWidth: 2, borderColor: cores.verde },
+  erro: { color: cores.vermelho, fontSize: 14, marginTop: 6 },
+});
