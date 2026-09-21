@@ -38,7 +38,7 @@ import { Mais as MaisTela } from './src/telas/Mais';
 import { Medicamentos } from './src/telas/Medicamentos';
 import { ModalConsulta, ModalCuidador } from './src/telas/Modais';
 import { interpretarAcaoWidget, interpretarAlvoWidget } from './src/widget/acoes';
-import { atualizarTimelineWidget, lerEAceitarAcoesDoLedger } from './src/widget/ledger';
+import { atualizarTimelineWidget, estaNoExpoGo, lerEAceitarAcoesDoLedger } from './src/widget/ledger';
 import { atualizarWidgetAndroid, criarSnapshotWidget, type WidgetSnapshot } from './src/widget/estado';
 
 type Aba = 'inicio' | 'medicamentos' | 'historico' | 'mais';
@@ -141,7 +141,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (Platform.OS !== 'ios') return;
+    if (Platform.OS !== 'ios' || estaNoExpoGo()) return;
     const snapshot = criarSnapshotWidget(estado);
     const futuras: Array<{ date: Date; snapshot: WidgetSnapshot }> = [];
     for (let deslocamento = 1; deslocamento <= 7; deslocamento += 1) {

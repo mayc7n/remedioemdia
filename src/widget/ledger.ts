@@ -7,6 +7,8 @@ export type AcaoLedger = { acao: 'taken' | 'snoozed'; ocorrenciaId: string; cria
 const CHAVE_LEDGER = 'remedio-em-dia-widget-ledger-v1';
 let fila: Promise<unknown> = Promise.resolve();
 
+export const estaNoExpoGo = () => Constants.executionEnvironment === 'storeClient' || Constants.appOwnership === 'expo';
+
 const serializar = <T,>(operacao: () => Promise<T>) => {
   const proxima = fila.then(operacao, operacao);
   fila = proxima.then(() => undefined, () => undefined);
@@ -48,7 +50,7 @@ export async function lerEAceitarAcoesDoLedger() {
 }
 
 export function atualizarTimelineWidget(snapshot: WidgetSnapshot, ocorrenciasFuturas: Array<{ date: Date; snapshot: WidgetSnapshot }>) {
-  if (Platform.OS === 'web' || Constants.appOwnership === 'expo') return;
+  if (Platform.OS === 'web' || estaNoExpoGo()) return;
   try {
     const Widget = require('./RemedioWidget.ios').default as { updateTimeline: (entradas: Array<{ date: Date; props: WidgetSnapshot }>) => void };
     Widget.updateTimeline([{ date: new Date(snapshot.atualizadoEm), props: snapshot }, ...ocorrenciasFuturas.map((item) => ({ date: item.date, props: item.snapshot }))]);
