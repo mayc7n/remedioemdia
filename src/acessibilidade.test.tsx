@@ -8,6 +8,7 @@ import { SeletorFrequencia } from './componentes/SeletorFrequencia';
 import { CuidadorForm } from './telas/CuidadorForm';
 import { DetalheMedicamento } from './telas/DetalheMedicamento';
 import { Inicio } from './telas/Inicio';
+import { Historico } from './telas/Historico';
 import { Mais } from './telas/Mais';
 import { Navegacao } from './componentes/Navegacao';
 
@@ -75,5 +76,12 @@ describe('acessibilidade dos fluxos críticos', () => {
     expect(tela.getByText('Com que frequência você usa este medicamento?')).toBeTruthy();
     expect(tela.getByLabelText('A cada quantos dias')).toBeTruthy();
     expect(tela.queryByLabelText('Intervalo em dias')).toBeNull();
+  });
+
+  it('expõe os filtros do histórico com controles acessíveis', async () => {
+    const tela = await render(<Historico registros={[]} />);
+
+    expect(tela.getByLabelText('Filtrar por medicamento')).toHaveProp('allowFontScaling', true);
+    expect(tela.getByRole('button', { name: 'Todos os períodos' }).props.accessibilityState).toEqual(expect.objectContaining({ selected: true }));
   });
 });
