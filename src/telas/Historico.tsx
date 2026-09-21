@@ -37,9 +37,8 @@ export function Historico({ registros }: { registros: RegistroMedicamento[] }) {
   }, [filtroMedicamento, periodo, registros]);
 
   return <View>
-    <Text style={estilos.secundario}>Acompanhe sem culpa</Text>
     <Text style={estilos.titulo}>Histórico</Text>
-    <Text style={estilos.lead}>Um registro simples do que aconteceu com seus lembretes.</Text>
+    <Text style={estilos.lead}>O que aconteceu com seus lembretes, sem julgamento.</Text>
     <View style={estilos.historicoFiltros}>
       <Text style={estilos.label}>Filtrar por medicamento</Text>
       <TextInput accessibilityLabel="Filtrar por medicamento" placeholder="Digite o nome do medicamento" placeholderTextColor={cores.mutado} value={filtroMedicamento} onChangeText={setFiltroMedicamento} allowFontScaling style={estilos.input} />
