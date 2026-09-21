@@ -1,6 +1,24 @@
-import { aplicarAcaoNaOcorrencia, criarRegistro, normalizarEstado, ocorrenciaPorId, ocorrenciasDoDia, proximaOcorrencia, atualizarRegistro, type EstadoApp, type Medicamento } from './agenda';
+import { aplicarAcaoNaOcorrencia, criarRegistro, desfazerAcaoNaOcorrencia, normalizarEstado, ocorrenciaPorId, ocorrenciasDoDia, proximaOcorrencia, atualizarRegistro, type EstadoApp, type Medicamento } from './agenda';
 
 describe('agenda de medicamentos', () => {
+  it('mantém notificações privadas ao normalizar estado legado', () => {
+    expect(normalizarEstado({ versao: 2, concluiuBoasVindas: true, medicamentos: [], registros: [], consultas: [] }).mostrarDetalhesNotificacao).toBe(false);
+  });
+
+  it('preserva o opt-in de detalhes das notificações', () => {
+    expect(normalizarEstado({ versao: 2, concluiuBoasVindas: true, mostrarDetalhesNotificacao: true, medicamentos: [], registros: [], consultas: [] }).mostrarDetalhesNotificacao).toBe(true);
+  });
+
+  it('desfaz uma ação recente sem apagar outros registros', () => {
+    const medicamento: Medicamento = { id: 'm1', nome: 'A', horarios: ['08:00'], frequencia: { tipo: 'diaria' }, situacao: 'ativo', criadoEm: '2026-09-18T00:00:00.000Z', atualizadoEm: '2026-09-18T00:00:00.000Z' };
+    const estado: EstadoApp = { versao: 2, concluiuBoasVindas: true, mostrarDetalhesNotificacao: false, medicamentos: [medicamento], registros: [{ id: 'outro', medicamentoId: 'm1', medicamentoNome: 'A', horario: '20:00', previstoPara: '2026-09-18T20:00:00', estado: 'taken', origem: 'app' }], consultas: [] };
+    const marcado = aplicarAcaoNaOcorrencia(estado, 'm1-2026-09-18-08:00', 'taken', 'app');
+
+    const desfeito = desfazerAcaoNaOcorrencia(marcado, 'm1-2026-09-18-08:00', 'taken');
+
+    expect(desfeito.registros).toEqual(estado.registros);
+  });
+
   it('gera ocorrências diárias em ordem de horário', () => {
     const ocorrencias = ocorrenciasDoDia(
       [
@@ -108,7 +126,7 @@ describe('agenda de medicamentos', () => {
       { id: 'm1', nome: 'Primeiro', horarios: ['08:00'], frequencia: { tipo: 'diaria' }, situacao: 'ativo', criadoEm: '2026-09-18T00:00:00.000Z', atualizadoEm: '2026-09-18T00:00:00.000Z' },
       { id: 'm1-extra', nome: 'Segundo', horarios: ['09:00'], frequencia: { tipo: 'diaria' }, situacao: 'ativo', criadoEm: '2026-09-18T00:00:00.000Z', atualizadoEm: '2026-09-18T00:00:00.000Z' },
     ];
-    const estado: EstadoApp = { versao: 2, concluiuBoasVindas: true, medicamentos, registros: [], consultas: [] };
+    const estado: EstadoApp = { versao: 2, concluiuBoasVindas: true, mostrarDetalhesNotificacao: false, medicamentos, registros: [], consultas: [] };
 
     const atualizado = aplicarAcaoNaOcorrencia(estado, 'm1-extra-2026-09-18-09:00', 'taken', 'app');
 

@@ -10,9 +10,11 @@ import {
   Consulta,
   EstadoApp,
   Medicamento,
+  RegistroMedicamento,
   aplicarAcaoNaOcorrencia,
   atualizarRegistro,
   criarRegistro,
+  desfazerAcaoNaOcorrencia,
   estadoInicial,
   ocorrenciaPorId,
   ocorrenciasDoDia,
@@ -39,6 +41,8 @@ import { atualizarWidgetAndroid, criarSnapshotWidget, type WidgetSnapshot } from
 
 type Aba = 'inicio' | 'medicamentos' | 'historico' | 'mais';
 type ModalAtivo = 'consulta' | 'cuidador' | 'emergencia' | null;
+type DesfazerPendente = { ocorrenciaId: string; acao: 'taken' | 'snoozed' | 'missed'; registroAnterior?: RegistroMedicamento; adiamentoId?: string };
+const JANELA_DESFAZER_MS = 8000;
 
 const idNovo = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 const hoje = () => new Date();
@@ -71,6 +75,7 @@ export default function App() {
   const [cuidadorNome, setCuidadorNome] = useState('');
   const [cuidadorContato, setCuidadorContato] = useState('');
   const [cuidadorAvisos, setCuidadorAvisos] = useState({ esquecido: true, adiado: true, consulta: true });
+  const [desfazerPendente, setDesfazerPendente] = useState<DesfazerPendente | null>(null);
 
   const persistir = async (proximo: EstadoApp, sincronizar = true) => {
     const resultado = sincronizar ? await sincronizarNotificacoesComFuso(proximo) : { estado: proximo, fusoMudou: false, quantidade: 0 };
@@ -78,6 +83,16 @@ export default function App() {
     await salvarEstado(resultado.estado);
     await atualizarWidgetAndroid(resultado.estado);
   };
+
+  const alternarDetalhesNotificacao = async () => {
+    await persistir({ ...estado, mostrarDetalhesNotificacao: !estado.mostrarDetalhesNotificacao });
+  };
+
+  useEffect(() => {
+    if (!desfazerPendente) return undefined;
+    const timer = setTimeout(() => setDesfazerPendente(null), JANELA_DESFAZER_MS);
+    return () => clearTimeout(timer);
+  }, [desfazerPendente]);
 
   useEffect(() => {
     let montado = true;
@@ -119,14 +134,30 @@ export default function App() {
   const marcar = async (ocorrencia: ReturnType<typeof ocorrenciasDoDia>[number], acao: 'taken' | 'snoozed' | 'missed') => {
     const medicamento = estado.medicamentos.find((item) => item.id === ocorrencia.medicamentoId);
     if (!medicamento) return;
-    const atual = estado.registros.find((item) => item.id === ocorrencia.id) ?? criarRegistro(medicamento, ocorrencia.previstoPara.slice(0, 10), ocorrencia.horario);
+    const registroAnterior = estado.registros.find((item) => item.id === ocorrencia.id);
+    const atual = registroAnterior ?? criarRegistro(medicamento, ocorrencia.previstoPara.slice(0, 10), ocorrencia.horario);
     const atualizado = atualizarRegistro(atual, acao, 'app');
     if (atualizado === atual) return;
     const registros = estado.registros.some((item) => item.id === atual.id)
       ? estado.registros.map((item) => item.id === atual.id ? atualizado : item)
       : [...estado.registros, atualizado];
     await persistir({ ...estado, registros });
-    if (acao === 'snoozed') await agendarAdiantamento(medicamento.nome, ocorrencia.id);
+    const adiamentoId = acao === 'snoozed' ? await agendarAdiantamento(medicamento.nome, ocorrencia.id, estado.mostrarDetalhesNotificacao) : undefined;
+    if (desfazerPendente?.adiamentoId) await Notifications.cancelScheduledNotificationAsync(desfazerPendente.adiamentoId);
+    setDesfazerPendente({ ocorrenciaId: ocorrencia.id, acao, registroAnterior, adiamentoId });
+  };
+
+  const desfazer = async () => {
+    const pendente = desfazerPendente;
+    if (!pendente) return;
+    const proximo = desfazerAcaoNaOcorrencia(estado, pendente.ocorrenciaId, pendente.acao, pendente.registroAnterior);
+    if (proximo === estado) {
+      setDesfazerPendente(null);
+      return;
+    }
+    await persistir(proximo);
+    if (pendente.adiamentoId) await Notifications.cancelScheduledNotificationAsync(pendente.adiamentoId);
+    setDesfazerPendente(null);
   };
 
   useEffect(() => {
@@ -155,7 +186,7 @@ export default function App() {
       const proximo = processarAcaoNotificacao(estado, acao.ocorrenciaId, acao.acao);
       if (proximo === estado) return;
       void persistir(proximo).then(async () => {
-        if (acao.acao === 'snoozed' && medicamento) await agendarAdiantamento(medicamento.nome, acao.ocorrenciaId);
+        if (acao.acao === 'snoozed' && medicamento) await agendarAdiantamento(medicamento.nome, acao.ocorrenciaId, estado.mostrarDetalhesNotificacao);
       });
     });
     return () => assinatura.remove();
@@ -237,7 +268,7 @@ export default function App() {
 
   if (carregando) return <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: cores.fundo }}><ActivityIndicator color={cores.verde} size="large" /></View>;
 
-  if (!estado.concluiuBoasVindas) return <SafeAreaView style={{ flex: 1, backgroundColor: cores.fundo }}><StatusBar style="dark" /><View style={{ flex: 1, justifyContent: 'center', padding: 26 }}><Text style={{ color: cores.verde, fontWeight: '800', fontSize: 18, marginBottom: 28 }}>Remédio em Dia</Text><Text style={{ color: cores.texto, fontSize: 34, lineHeight: 40, fontWeight: '800' }}>Uma ajuda para lembrar, no seu ritmo.</Text><Text style={{ color: cores.mutado, fontSize: 18, lineHeight: 27, marginTop: 16, marginBottom: 22 }}>Organize medicamentos, consultas e exames. Seus dados ficam neste aparelho e o app continua funcionando sem Internet.</Text><View style={{ backgroundColor: cores.verdeClaro, borderRadius: 16, padding: 16, marginVertical: 18, borderLeftWidth: 4, borderLeftColor: cores.verde }}><Text style={estilos.nome}>Um lembrete, não uma prescrição</Text><Text style={estilos.secundario}>Siga sempre a orientação do seu médico. O app não altera doses nem oferece diagnóstico.</Text></View><Botao texto="Entendi, começar" onPress={() => persistir({ ...estado, concluiuBoasVindas: true })} /></View></SafeAreaView>;
+  if (!estado.concluiuBoasVindas) return <SafeAreaView style={{ flex: 1, backgroundColor: cores.fundo }}><StatusBar style="dark" /><View style={{ flex: 1, justifyContent: 'center', padding: 26 }}><Text style={{ color: cores.verde, fontWeight: '800', fontSize: 18, marginBottom: 28 }}>Remédio em Dia</Text><Text style={{ color: cores.texto, fontSize: 34, lineHeight: 40, fontWeight: '800' }}>Uma ajuda para lembrar, no seu ritmo.</Text><Text style={{ color: cores.mutado, fontSize: 18, lineHeight: 27, marginTop: 16, marginBottom: 22 }}>Organize medicamentos, consultas e exames. Seus dados ficam neste aparelho e o app continua funcionando sem Internet.</Text><View style={{ backgroundColor: cores.verdeClaro, borderRadius: 16, padding: 16, marginVertical: 18, borderLeftWidth: 4, borderLeftColor: cores.verde }}><Text style={estilos.nome}>Um lembrete, não uma prescrição</Text><Text style={estilos.secundario}>O app não prescreve medicamentos, não altera doses e não oferece diagnóstico. Siga sempre a orientação do seu médico.</Text></View><Botao texto="Entendi, começar" onPress={() => persistir({ ...estado, concluiuBoasVindas: true })} /></View></SafeAreaView>;
 
   if (medicamentoSelecionado) return <SafeAreaView style={{ flex: 1, backgroundColor: cores.fundo }}><StatusBar style="dark" /><View style={{ flex: 1, padding: 22 }}><Botao texto="Voltar para medicamentos" variante="texto" onPress={() => setMedicamentoAberto(null)} /><DetalheMedicamento medicamento={medicamentoSelecionado} novo={medicamentoSelecionado.id === 'novo'} registros={estado.registros} onSalvar={salvarMedicamento} onPausar={mudarSituacao} onExcluir={excluirMedicamento} /></View></SafeAreaView>;
 
@@ -245,10 +276,10 @@ export default function App() {
     <StatusBar style="dark" />
     <ScrollView contentContainerStyle={{ padding: 22, paddingBottom: 100 }}>
       <Text style={[estilos.secundario, { textTransform: 'capitalize' }]}>{dataHoje()}</Text>
-      {aba === 'inicio' && <Inicio ocorrencias={ocorrencias} registros={estado.registros} consultas={consultasFuturas} marcar={marcar} abrirMedicamento={() => setMedicamentoAberto('novo')} />}
+      {aba === 'inicio' && <Inicio ocorrencias={ocorrencias} registros={estado.registros} consultas={consultasFuturas} marcar={marcar} abrirMedicamento={() => setMedicamentoAberto('novo')} desfazerDisponivel={Boolean(desfazerPendente)} desfazer={desfazer} />}
       {aba === 'medicamentos' && <Medicamentos medicamentos={estado.medicamentos} abrirDetalhe={setMedicamentoAberto} abrirNovo={() => setMedicamentoAberto('novo')} />}
       {aba === 'historico' && <Historico registros={estado.registros} />}
-      {aba === 'mais' && <MaisTela consultas={consultasFuturas} cuidador={estado.cuidador} abrirConsulta={() => setModal('consulta')} abrirCuidador={() => setModal('cuidador')} concluirConsulta={concluirConsulta} excluirConsulta={excluirConsulta} />}
+      {aba === 'mais' && <MaisTela consultas={consultasFuturas} cuidador={estado.cuidador} abrirConsulta={() => setModal('consulta')} abrirCuidador={() => setModal('cuidador')} concluirConsulta={concluirConsulta} excluirConsulta={excluirConsulta} mostrarDetalhesNotificacao={estado.mostrarDetalhesNotificacao} alternarDetalhesNotificacao={alternarDetalhesNotificacao} />}
     </ScrollView>
     <Navegacao aba={aba} onChange={setAba} />
     <ModalConsulta visivel={modal === 'consulta'} fechar={() => setModal(null)} titulo={consultaTitulo} setTitulo={setConsultaTitulo} data={consultaData} setData={setConsultaData} tipo={consultaTipo} setTipo={setConsultaTipo} local={consultaLocal} setLocal={setConsultaLocal} observacao={consultaObservacao} setObservacao={setConsultaObservacao} salvar={cadastrarConsulta} />

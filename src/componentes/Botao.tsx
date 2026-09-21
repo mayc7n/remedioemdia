@@ -31,7 +31,7 @@ export function Botao({ texto, onPress, variante = 'primario', desativado = fals
       onPress={onPress}
       style={({ pressed }) => [estilos.botao, estiloVariante, pressed && estilos.pressionado, desativado && estilos.desativado]}
     >
-      <Text style={[estilos.textoBotao, variante === 'suave' && estilos.textoBotaoSuave, variante === 'texto' && estilos.textoBotaoTexto]}>{texto}</Text>
+      <Text allowFontScaling style={[estilos.textoBotao, variante === 'suave' && estilos.textoBotaoSuave, variante === 'texto' && estilos.textoBotaoTexto]}>{texto}</Text>
     </Pressable>
   );
 }

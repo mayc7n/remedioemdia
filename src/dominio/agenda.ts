@@ -50,6 +50,7 @@ export type Cuidador = {
 export type EstadoApp = {
   versao: 2;
   concluiuBoasVindas: boolean;
+  mostrarDetalhesNotificacao: boolean;
   medicamentos: Medicamento[];
   registros: RegistroMedicamento[];
   consultas: Consulta[];
@@ -156,6 +157,7 @@ const normalizarCuidador = (valor: unknown): Cuidador | undefined => {
 export const estadoInicial: EstadoApp = {
   versao: 2,
   concluiuBoasVindas: false,
+  mostrarDetalhesNotificacao: false,
   medicamentos: [],
   registros: [],
   consultas: [],
@@ -170,6 +172,7 @@ export const normalizarEstado = (entrada: unknown): EstadoApp => {
   return {
     versao: 2,
     concluiuBoasVindas: entrada.concluiuBoasVindas === true,
+    mostrarDetalhesNotificacao: entrada.mostrarDetalhesNotificacao === true,
     medicamentos,
     registros,
     consultas,
@@ -249,6 +252,20 @@ export const atualizarRegistro = (
 ) => registro.estado === 'pendente'
   ? { ...registro, estado, origem, registradoEm: new Date().toISOString() }
   : registro;
+
+export const desfazerAcaoNaOcorrencia = (
+  estado: EstadoApp,
+  ocorrenciaId: string,
+  acao: Exclude<EstadoRegistro, 'pendente'>,
+  registroAnterior?: RegistroMedicamento,
+) => {
+  const atual = estado.registros.find((registro) => registro.id === ocorrenciaId);
+  if (!atual || atual.estado !== acao) return estado;
+  const registros = registroAnterior
+    ? estado.registros.map((registro) => registro.id === ocorrenciaId ? registroAnterior : registro)
+    : estado.registros.filter((registro) => registro.id !== ocorrenciaId);
+  return { ...estado, registros };
+};
 
 export const aplicarAcaoNaOcorrencia = (
   estado: EstadoApp,

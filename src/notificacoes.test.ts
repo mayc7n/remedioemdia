@@ -27,6 +27,7 @@ jest.mock('expo-notifications', () => ({
 const estadoBase: EstadoApp = {
   versao: 2,
   concluiuBoasVindas: true,
+  mostrarDetalhesNotificacao: false,
   medicamentos: [],
   registros: [],
   consultas: [],
@@ -56,6 +57,45 @@ beforeEach(() => {
 });
 
 describe('reconciliador de notificações', () => {
+  it('oculta o nome do medicamento por padrão', async () => {
+    await sincronizarNotificacoes({ ...estadoBase, medicamentos: [medicamento()] }, new Date(2026, 8, 19, 7, 0));
+
+    const request = (Notifications.scheduleNotificationAsync as jest.Mock).mock.calls[0][0];
+    expect(request.content.title).toBe('Lembrete de medicamento');
+    expect(request.content.body).toBe('Você tem um lembrete de medicamento.');
+    expect(request.content.body).not.toContain('Remédio');
+  });
+
+  it('exibe o conteúdo completo somente quando a preferência foi ativada', async () => {
+    await sincronizarNotificacoes({ ...estadoBase, mostrarDetalhesNotificacao: true, medicamentos: [medicamento()] }, new Date(2026, 8, 19, 7, 0));
+
+    const request = (Notifications.scheduleNotificationAsync as jest.Mock).mock.calls[0][0];
+    expect(request.content.title).toBe('Remédio em Dia');
+    expect(request.content.body).toContain('Remédio');
+  });
+
+  it('oculta o título da consulta por padrão', async () => {
+    await sincronizarNotificacoes({
+      ...estadoBase,
+      consultas: [{ id: 'c1', tipo: 'consulta', titulo: 'Retorno com cardiologista', marcadoPara: '2026-09-20T10:00', lembretes: true, concluida: false }],
+    }, new Date(2026, 8, 19, 9, 0));
+
+    const request = (Notifications.scheduleNotificationAsync as jest.Mock).mock.calls[0][0];
+    expect(request.content.body).toBe('Você tem um compromisso de saúde amanhã.');
+    expect(request.content.body).not.toContain('cardiologista');
+  });
+
+  it('exibe o título da consulta somente quando a preferência foi ativada', async () => {
+    await sincronizarNotificacoes({
+      ...estadoBase,
+      mostrarDetalhesNotificacao: true,
+      consultas: [{ id: 'c1', tipo: 'consulta', titulo: 'Retorno com cardiologista', marcadoPara: '2026-09-20T10:00', lembretes: true, concluida: false }],
+    }, new Date(2026, 8, 19, 9, 0));
+
+    const request = (Notifications.scheduleNotificationAsync as jest.Mock).mock.calls[0][0];
+    expect(request.content.body).toContain('Retorno com cardiologista');
+  });
+
   it('cancela somente avisos do app e mantém IDs estáveis ao sincronizar', async () => {
     const estado = { ...estadoBase, medicamentos: [medicamento()] };
 
@@ -135,10 +175,19 @@ describe('reconciliador de notificações', () => {
     expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith(expect.objectContaining({
       identifier: expect.stringMatching(/^adiamento-/),
       content: expect.objectContaining({
-        body: expect.stringContaining('Remédio'),
+        title: 'Lembrete de medicamento',
+        body: 'Você tem um lembrete de medicamento.',
         data: expect.objectContaining({ finalidade: 'adiamento', ocorrenciaId: 'm1-2026-09-19-08:00' }),
       }),
       trigger: expect.objectContaining({ type: 'date' }),
+    }));
+  });
+
+  it('preserva o nome no adiamento quando os detalhes foram autorizados', async () => {
+    await agendarAdiantamento('Remédio', 'm1-2026-09-19-08:00', true);
+
+    expect(Notifications.scheduleNotificationAsync).toHaveBeenCalledWith(expect.objectContaining({
+      content: expect.objectContaining({ title: 'Remédio em Dia', body: expect.stringContaining('Remédio') }),
     }));
   });
 

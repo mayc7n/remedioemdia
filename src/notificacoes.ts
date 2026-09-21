@@ -47,7 +47,15 @@ const dataDaOcorrencia = (dia: Date, horario: string) => {
 const horarioPartes = (horario: string) => horario.split(':').map(Number) as [number, number];
 const horarioId = (horario: string) => horario.replace(':', '-');
 
-const corpoMedicamento = (nome: string) => `Está na hora de ${nome}. Siga a orientação do seu médico.`;
+const corpoMedicamento = (nome: string, mostrarDetalhes: boolean) => mostrarDetalhes
+  ? `Está na hora de ${nome}. Siga a orientação do seu médico.`
+  : 'Você tem um lembrete de medicamento.';
+
+const corpoConsulta = (titulo: string, data: Date, finalidade: 'lembrete-24h' | 'lembrete-1h', mostrarDetalhes: boolean) => mostrarDetalhes
+  ? `${titulo} está marcado para ${data.toLocaleString('pt-BR')}.`
+  : finalidade === 'lembrete-24h'
+    ? 'Você tem um compromisso de saúde amanhã.'
+    : 'Você tem um compromisso de saúde em breve.';
 
 const metadados = (
   tipo: MetadadosNotificacao['tipo'],
@@ -63,11 +71,12 @@ const requestMedicamento = (
   trigger: Notifications.NotificationTriggerInput,
   finalidade: FinalidadeNotificacao = 'recorrente',
   ocorrenciaId?: string,
+  mostrarDetalhes = false,
 ) => ({
   identifier,
   content: {
-    title: 'Remédio em Dia',
-    body: corpoMedicamento(nome),
+    title: mostrarDetalhes ? 'Remédio em Dia' : 'Lembrete de medicamento',
+    body: corpoMedicamento(nome, mostrarDetalhes),
     categoryIdentifier: CATEGORIA_MEDICAMENTO,
     data: metadados('medicamento', medicamentoId, finalidade, ocorrenciaId),
   },
@@ -80,11 +89,12 @@ const requestConsulta = (
   identifier: string,
   data: Date,
   finalidade: 'lembrete-24h' | 'lembrete-1h',
+  mostrarDetalhes: boolean,
 ) => ({
   identifier,
   content: {
-    title: 'Remédio em Dia',
-    body: `${titulo} está marcado para ${data.toLocaleString('pt-BR')}.`,
+    title: mostrarDetalhes ? 'Remédio em Dia' : 'Lembrete de saúde',
+    body: corpoConsulta(titulo, data, finalidade, mostrarDetalhes),
     data: metadados('consulta', consultaId, finalidade),
   },
   trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE as const, date: data },
@@ -115,6 +125,9 @@ const requestsMedicamentos = (estado: EstadoApp, agora: Date) => estado.medicame
           medicamento.nome,
           `medicamento-${medicamento.id}-diaria-${horarioId(horario)}`,
           { type: Notifications.SchedulableTriggerInputTypes.DAILY, hour, minute },
+          'recorrente',
+          undefined,
+          estado.mostrarDetalhesNotificacao,
         );
       });
     }
@@ -127,6 +140,9 @@ const requestsMedicamentos = (estado: EstadoApp, agora: Date) => estado.medicame
           medicamento.nome,
           `medicamento-${medicamento.id}-semana-${dia}-${horarioId(horario)}`,
           { type: Notifications.SchedulableTriggerInputTypes.WEEKLY, weekday: dia + 1, hour, minute },
+          'recorrente',
+          undefined,
+          estado.mostrarDetalhesNotificacao,
         );
       }));
     }
@@ -146,6 +162,7 @@ const requestsMedicamentos = (estado: EstadoApp, agora: Date) => estado.medicame
         { type: Notifications.SchedulableTriggerInputTypes.DATE, date: data },
         'recorrente',
         ocorrencia.id,
+        estado.mostrarDetalhesNotificacao,
       ));
   });
 
@@ -157,8 +174,8 @@ const requestsConsultas = (estado: EstadoApp, agora: Date) => estado.consultas
     const umDiaAntes = new Date(marcadoPara.getTime() - 24 * 60 * 60 * 1000);
     const umaHoraAntes = new Date(marcadoPara.getTime() - 60 * 60 * 1000);
     return [
-      umDiaAntes.getTime() > agora.getTime() ? requestConsulta(consulta.id, consulta.titulo, `consulta-${consulta.id}-24h`, umDiaAntes, 'lembrete-24h') : null,
-      umaHoraAntes.getTime() > agora.getTime() ? requestConsulta(consulta.id, consulta.titulo, `consulta-${consulta.id}-1h`, umaHoraAntes, 'lembrete-1h') : null,
+      umDiaAntes.getTime() > agora.getTime() ? requestConsulta(consulta.id, consulta.titulo, `consulta-${consulta.id}-24h`, umDiaAntes, 'lembrete-24h', estado.mostrarDetalhesNotificacao) : null,
+      umaHoraAntes.getTime() > agora.getTime() ? requestConsulta(consulta.id, consulta.titulo, `consulta-${consulta.id}-1h`, umaHoraAntes, 'lembrete-1h', estado.mostrarDetalhesNotificacao) : null,
     ].filter((request): request is NonNullable<typeof request> => request !== null);
   });
 
@@ -215,7 +232,7 @@ export async function sincronizarNotificacoesComFuso(estado: EstadoApp, agora = 
   };
 }
 
-export async function agendarAdiantamento(nome: string, ocorrenciaId?: string) {
+export async function agendarAdiantamento(nome: string, ocorrenciaId?: string, mostrarDetalhes = false) {
   const data = new Date(Date.now() + 15 * 60 * 1000);
   const identifier = `adiamento-${ocorrenciaId ?? 'avulso'}-${Date.now()}`;
   await agendar(requestMedicamento(
@@ -225,11 +242,12 @@ export async function agendarAdiantamento(nome: string, ocorrenciaId?: string) {
     { type: Notifications.SchedulableTriggerInputTypes.DATE, date: data },
     'adiamento',
     ocorrenciaId,
+    mostrarDetalhes,
   ));
   return identifier;
 }
 
-export async function agendarLembrete(nome: string, data: Date) {
+export async function agendarLembrete(nome: string, data: Date, mostrarDetalhes = false) {
   if (data.getTime() <= Date.now()) return null;
   const identifier = `avulso-${Date.now()}`;
   await agendar(requestMedicamento(
@@ -238,12 +256,14 @@ export async function agendarLembrete(nome: string, data: Date) {
     identifier,
     { type: Notifications.SchedulableTriggerInputTypes.DATE, date: data },
     'avulso',
+    undefined,
+    mostrarDetalhes,
   ));
   return identifier;
 }
 
-export async function adiarLembrete(nome: string) {
-  return agendarAdiantamento(nome);
+export async function adiarLembrete(nome: string, mostrarDetalhes = false) {
+  return agendarAdiantamento(nome, undefined, mostrarDetalhes);
 }
 
 export function processarAcaoNotificacao(estado: EstadoApp, ocorrenciaId: string, acao: 'taken' | 'snoozed' | 'missed') {

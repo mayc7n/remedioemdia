@@ -20,18 +20,19 @@ export function SeletorFrequencia({ value, onChange }: Props) {
   };
   return (
     <View>
-      <Rotulo>Frequência</Rotulo>
+      <Rotulo>Quando usar</Rotulo>
+      <Text style={estilos.ajudaCampo}>Com que frequência você usa este medicamento?</Text>
       <View style={estilos.escolhas}>
         <Botao texto="Todos os dias" variante={value.tipo === 'diaria' ? 'primario' : 'suave'} onPress={() => selecionaTipo('diaria')} accessibilityLabel="Frequência todos os dias" />
-        <Botao texto="Dias específicos" variante={value.tipo === 'diasDaSemana' ? 'primario' : 'suave'} onPress={() => selecionaTipo('diasDaSemana')} accessibilityLabel="Frequência dias específicos" />
-        <Botao texto="Intervalo" variante={value.tipo === 'intervalo' ? 'primario' : 'suave'} onPress={() => selecionaTipo('intervalo')} accessibilityLabel="Frequência por intervalo" />
+        <Botao texto="Alguns dias" variante={value.tipo === 'diasDaSemana' ? 'primario' : 'suave'} onPress={() => selecionaTipo('diasDaSemana')} accessibilityLabel="Usar apenas alguns dias" />
+        <Botao texto="A cada alguns dias" variante={value.tipo === 'intervalo' ? 'primario' : 'suave'} onPress={() => selecionaTipo('intervalo')} accessibilityLabel="Repetir a cada alguns dias" />
       </View>
       {value.tipo === 'diasDaSemana' && <View style={estilos.escolhas}>
         {dias.map((nome, dia) => <Botao key={nome} texto={nome} variante={value.dias.includes(dia) ? 'primario' : 'suave'} onPress={() => alternaDia(dia)} accessibilityLabel={`Dia ${nome}`} />)}
       </View>}
-      {value.tipo === 'intervalo' && <TextInput accessibilityLabel="Intervalo em dias" value={String(value.aCadaDias)} onChangeText={(texto) => onChange({ tipo: 'intervalo', aCadaDias: Number(texto.replace(/\D/g, '')) || 0 })} keyboardType="number-pad" allowFontScaling style={estilos.input} />}
-      {value.tipo === 'diasDaSemana' && value.dias.length === 0 && <Text style={estilos.erro}>Selecione pelo menos um dia.</Text>}
-      {value.tipo === 'intervalo' && value.aCadaDias < 1 && <Text style={estilos.erro}>Informe um intervalo maior que zero.</Text>}
+      {value.tipo === 'intervalo' && <View><Text style={estilos.ajudaCampo}>Digite de quantos em quantos dias você usa o medicamento.</Text><TextInput accessibilityLabel="A cada quantos dias" value={String(value.aCadaDias)} onChangeText={(texto) => onChange({ tipo: 'intervalo', aCadaDias: Number(texto.replace(/\D/g, '')) || 0 })} keyboardType="number-pad" allowFontScaling style={estilos.input} /></View>}
+      {value.tipo === 'diasDaSemana' && value.dias.length === 0 && <Text style={estilos.erro}>Escolha pelo menos um dia.</Text>}
+      {value.tipo === 'intervalo' && value.aCadaDias < 1 && <Text style={estilos.erro}>Digite um número maior que zero.</Text>}
     </View>
   );
 }

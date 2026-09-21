@@ -10,6 +10,7 @@ jest.mock('../dados/armazenamento', () => ({
 const estadoBase: EstadoApp = {
   versao: 2,
   concluiuBoasVindas: true,
+  mostrarDetalhesNotificacao: false,
   medicamentos: [],
   registros: [],
   consultas: [],

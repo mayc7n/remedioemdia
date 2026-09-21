@@ -4,6 +4,7 @@ import { revogarCuidador, salvarCuidadorComConsentimento, resumoCompartilhamento
 const estado: EstadoApp = {
   versao: 2,
   concluiuBoasVindas: true,
+  mostrarDetalhesNotificacao: false,
   medicamentos: [],
   registros: [],
   consultas: [],
