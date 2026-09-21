@@ -12,6 +12,7 @@
       "bundleIdentifier": "com.mayc7n.remedioemdia"
     },
     "android": {
+      "permissions": ["android.permission.SCHEDULE_EXACT_ALARM"],
       "adaptiveIcon": {
         "backgroundColor": "#173D3A",
         "foregroundImage": "./assets/android-icon-foreground.png",
