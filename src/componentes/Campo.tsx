@@ -1,5 +1,5 @@
 import { Text, TextInput, View, type KeyboardTypeOptions } from 'react-native';
-import { estilos } from './tema';
+import { cores, estilos } from './tema';
 
 type Props = {
   label: string;
@@ -19,7 +19,7 @@ export function Campo({ label, value, onChangeText, placeholder, keyboardType = 
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor="#71807A"
+        placeholderTextColor={cores.mutado}
         keyboardType={keyboardType}
         multiline={multiline}
         textAlignVertical={multiline ? 'top' : 'center'}
