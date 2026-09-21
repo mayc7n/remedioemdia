@@ -25,6 +25,7 @@ import {
   deveSincronizarAoRetomar,
   interpretarRespostaNotificacao,
   prepararNotificacoes,
+  processarRespostaNotificacao,
   processarAcaoNotificacao,
   sincronizarNotificacoesComFuso,
 } from './src/notificacoes';
@@ -103,8 +104,17 @@ export default function App() {
     (async () => {
       const salvo = await carregarEstado();
       const acoesDoWidget = await lerEAceitarAcoesDoLedger();
-      const comAcoes = acoesDoWidget.reduce((atual, acao) => aplicarAcaoNaOcorrencia(atual, acao.ocorrenciaId, acao.acao, 'widget'), salvo);
+      const respostaInicial = await Notifications.getLastNotificationResponseAsync().catch(() => null);
+      const acaoInicial = interpretarRespostaNotificacao(respostaInicial);
+      const comRespostaInicial = processarRespostaNotificacao(salvo, respostaInicial);
+      const comAcoes = acoesDoWidget.reduce((atual, acao) => aplicarAcaoNaOcorrencia(atual, acao.ocorrenciaId, acao.acao, 'widget'), comRespostaInicial);
       await configurarNotificacoesNativas();
+      if (acaoInicial?.acao === 'snoozed') {
+        const ocorrencia = ocorrenciaPorId(comAcoes.medicamentos, acaoInicial.ocorrenciaId);
+        const medicamento = ocorrencia ? comAcoes.medicamentos.find((item) => item.id === ocorrencia.medicamentoId) : undefined;
+        if (ocorrencia && medicamento) await agendarAdiantamento(medicamento.nome, ocorrencia.id, comAcoes.mostrarDetalhesNotificacao);
+      }
+      if (respostaInicial) await Notifications.clearLastNotificationResponseAsync().catch(() => undefined);
       const resultado = await sincronizarNotificacoesComFuso(comAcoes);
       if (!montado) return;
       estadoRef.current = resultado.estado;

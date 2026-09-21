@@ -3,6 +3,7 @@ import { EstadoApp } from './dominio/agenda';
 import {
   agendarAdiantamento,
   deveSincronizarAoRetomar,
+  processarRespostaNotificacao,
   prepararNotificacoes,
   interpretarRespostaNotificacao,
   sincronizarNotificacoes,
@@ -17,6 +18,24 @@ describe('retomada do app', () => {
 
   it('não repete a sincronização enquanto o app continua ativo', () => {
     expect(deveSincronizarAoRetomar('active', 'active')).toBe(false);
+  });
+});
+
+describe('resposta inicial da notificação', () => {
+  it('aplica uma ação pendente quando o app é aberto pela notificação', () => {
+    const estado = { ...estadoBase, medicamentos: [medicamento()] };
+    const resposta = { actionIdentifier: 'taken', notification: { request: { content: { data: { origem: 'remedio-em-dia', ocorrenciaId: 'm1-2026-09-19-08:00' } } } } };
+
+    const resultado = processarRespostaNotificacao(estado, resposta);
+
+    expect(resultado.registros).toEqual([expect.objectContaining({ id: 'm1-2026-09-19-08:00', estado: 'taken', origem: 'notification' })]);
+  });
+
+  it('ignora toque simples ou resposta de outro app', () => {
+    const estado = { ...estadoBase, medicamentos: [medicamento()] };
+    const resposta = { actionIdentifier: 'expo.notifications.DEFAULT', notification: { request: { content: { data: { origem: 'outro-app' } } } } };
+
+    expect(processarRespostaNotificacao(estado, resposta)).toBe(estado);
   });
 });
 

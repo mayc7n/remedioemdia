@@ -275,7 +275,7 @@ export function processarAcaoNotificacao(estado: EstadoApp, ocorrenciaId: string
 }
 
 export function interpretarRespostaNotificacao(
-  resposta: { actionIdentifier: string; notification: { request: { content: { data?: unknown } } } } | null | undefined,
+  resposta: RespostaNotificacao,
 ): { ocorrenciaId: string; acao: 'taken' | 'snoozed' | 'missed' } | null {
   if (!resposta) return null;
   const acao = resposta.actionIdentifier;
@@ -283,4 +283,11 @@ export function interpretarRespostaNotificacao(
   const data = resposta.notification.request.content.data;
   if (typeof data !== 'object' || data === null || !('origem' in data) || data.origem !== ORIGEM || !('ocorrenciaId' in data) || typeof data.ocorrenciaId !== 'string' || !data.ocorrenciaId) return null;
   return { ocorrenciaId: data.ocorrenciaId, acao };
+}
+
+export type RespostaNotificacao = { actionIdentifier: string; notification: { request: { content: { data?: unknown } } } } | null | undefined;
+
+export function processarRespostaNotificacao(estado: EstadoApp, resposta: RespostaNotificacao) {
+  const acao = interpretarRespostaNotificacao(resposta);
+  return acao ? processarAcaoNotificacao(estado, acao.ocorrenciaId, acao.acao) : estado;
 }
