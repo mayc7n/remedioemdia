@@ -1,5 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import type { AppStateStatus } from 'react-native';
 import {
   EstadoApp,
   aplicarAcaoNaOcorrencia,
@@ -20,6 +21,9 @@ const ORIGEM = 'remedio-em-dia';
 const JANELA_INTERVALO_DIAS = 60;
 export const CATEGORIA_MEDICAMENTO = 'medicamento_acoes';
 export const CANAL_MEDICAMENTOS = 'medicamentos';
+
+export const deveSincronizarAoRetomar = (anterior: AppStateStatus | null, atual: AppStateStatus) =>
+  atual === 'active' && anterior !== 'active';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({

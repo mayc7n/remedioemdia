@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Linking, Platform, ScrollView, Text, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, AppState, Linking, Platform, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Botao } from './src/componentes/Botao';
 import { Navegacao } from './src/componentes/Navegacao';
@@ -22,6 +22,7 @@ import {
 import {
   agendarAdiantamento,
   configurarNotificacoesNativas,
+  deveSincronizarAoRetomar,
   interpretarRespostaNotificacao,
   prepararNotificacoes,
   processarAcaoNotificacao,
@@ -76,9 +77,12 @@ export default function App() {
   const [cuidadorContato, setCuidadorContato] = useState('');
   const [cuidadorAvisos, setCuidadorAvisos] = useState({ esquecido: true, adiado: true, consulta: true });
   const [desfazerPendente, setDesfazerPendente] = useState<DesfazerPendente | null>(null);
+  const estadoRef = useRef(estado);
+  const sincronizandoRetomadaRef = useRef(false);
 
   const persistir = async (proximo: EstadoApp, sincronizar = true) => {
     const resultado = sincronizar ? await sincronizarNotificacoesComFuso(proximo) : { estado: proximo, fusoMudou: false, quantidade: 0 };
+    estadoRef.current = resultado.estado;
     setEstado(resultado.estado);
     await salvarEstado(resultado.estado);
     await atualizarWidgetAndroid(resultado.estado);
@@ -103,12 +107,27 @@ export default function App() {
       await configurarNotificacoesNativas();
       const resultado = await sincronizarNotificacoesComFuso(comAcoes);
       if (!montado) return;
+      estadoRef.current = resultado.estado;
       setEstado(resultado.estado);
       if (resultado.fusoMudou) await salvarEstado(resultado.estado);
       await atualizarWidgetAndroid(resultado.estado);
       setCarregando(false);
     })();
     return () => { montado = false; };
+  }, []);
+
+  useEffect(() => {
+    let anterior = AppState.currentState;
+    const assinatura = AppState.addEventListener('change', (atual) => {
+      const retomar = deveSincronizarAoRetomar(anterior, atual);
+      anterior = atual;
+      if (!retomar || sincronizandoRetomadaRef.current) return;
+      sincronizandoRetomadaRef.current = true;
+      void persistir(estadoRef.current).catch(() => undefined).finally(() => {
+        sincronizandoRetomadaRef.current = false;
+      });
+    });
+    return () => assinatura.remove();
   }, []);
 
   useEffect(() => {

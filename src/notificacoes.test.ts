@@ -2,11 +2,23 @@ import * as Notifications from 'expo-notifications';
 import { EstadoApp } from './dominio/agenda';
 import {
   agendarAdiantamento,
+  deveSincronizarAoRetomar,
   prepararNotificacoes,
   interpretarRespostaNotificacao,
   sincronizarNotificacoes,
   sincronizarNotificacoesComFuso,
 } from './notificacoes';
+
+describe('retomada do app', () => {
+  it('sincroniza ao sair de segundo plano e voltar ao estado ativo', () => {
+    expect(deveSincronizarAoRetomar('background', 'active')).toBe(true);
+    expect(deveSincronizarAoRetomar('inactive', 'active')).toBe(true);
+  });
+
+  it('não repete a sincronização enquanto o app continua ativo', () => {
+    expect(deveSincronizarAoRetomar('active', 'active')).toBe(false);
+  });
+});
 
 jest.mock('expo-notifications', () => ({
   SchedulableTriggerInputTypes: {
