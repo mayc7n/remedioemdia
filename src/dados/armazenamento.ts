@@ -10,7 +10,7 @@ export async function carregarEstado(): Promise<EstadoApp> {
     const bruto: unknown = JSON.parse(salvo);
     const normalizado = normalizarEstado(bruto);
     if (!bruto || typeof bruto !== 'object' || (bruto as { versao?: unknown }).versao !== 3) {
-      await salvarEstado(normalizado);
+      await salvarEstado(normalizado).catch(() => undefined);
     }
     return normalizado;
   } catch {

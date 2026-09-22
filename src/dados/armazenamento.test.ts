@@ -45,6 +45,22 @@ describe('armazenamento do estado', () => {
     );
   });
 
+  it('mantém os dados normalizados quando não consegue persistir a migração', async () => {
+    getItemAsync.mockResolvedValue(JSON.stringify({
+      versao: 2,
+      concluiuBoasVindas: true,
+      medicamentos: [{ id: 'm1', nome: 'A', horarios: ['08:00'], frequencia: { tipo: 'diaria' }, ativo: true, criadoEm: '2026-09-18T00:00:00.000Z' }],
+      registros: [],
+      consultas: [],
+    }));
+    setItemAsync.mockRejectedValue(new Error('armazenamento indisponível'));
+
+    const estado = await carregarEstado();
+
+    expect(estado).toMatchObject({ versao: 3, modoCuidador: 'naoInformado' });
+    expect(estado.medicamentos).toHaveLength(1);
+  });
+
   it('retorna estado inicial quando o JSON está inválido', async () => {
     getItemAsync.mockResolvedValue('{invalido');
 
