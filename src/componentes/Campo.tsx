@@ -24,7 +24,7 @@ export function Campo({ label, value, onChangeText, placeholder, keyboardType = 
         multiline={multiline}
         textAlignVertical={multiline ? 'top' : 'center'}
         allowFontScaling
-        style={[estilos.input, multiline && { minHeight: 96, paddingTop: 14 }]}
+        style={[estilos.input, multiline && estilos.campoMultilinha]}
       />
     </View>
   );

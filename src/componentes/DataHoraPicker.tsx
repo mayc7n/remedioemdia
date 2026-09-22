@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Modal, Platform, Pressable, Text, View } from 'react-native';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { Botao } from './Botao';
 import { estilos } from './tema';
 
 const valorParaData = (valor: string) => {
@@ -76,11 +77,11 @@ export function DataHoraPicker({ valor, onChange }: Props) {
     {aberto && Platform.OS === 'android' && etapaAndroid === 'time' && <DateTimePicker value={rascunho} mode="time" display="default" locale="pt-BR" onChange={alterarHora} />}
 
     {aberto && Platform.OS === 'ios' && <Modal transparent animationType="slide" visible onRequestClose={() => setAberto(false)}>
-      <View style={estilos.pickerBackdrop}>
-        <View style={estilos.pickerFolha}>
+      <View style={estilos.modalBackdrop}>
+        <View style={estilos.modalFolha}>
           <View style={estilos.linhaEntre}><Text style={estilos.nome}>Escolha a data e a hora</Text><Pressable accessibilityRole="button" accessibilityLabel="Cancelar escolha de data e hora" onPress={() => setAberto(false)} style={estilos.pickerAcao}><Text style={estilos.pickerCancelar}>Cancelar</Text></Pressable></View>
           <DateTimePicker value={rascunho} mode="datetime" display="spinner" locale="pt-BR" onChange={(_, data) => data && setRascunho(data)} />
-          <Pressable accessibilityRole="button" accessibilityLabel="Usar data e hora escolhidas" onPress={concluir} style={[estilos.botao, estilos.botaoPrimario]}><Text allowFontScaling style={estilos.textoBotao}>Usar data e hora</Text></Pressable>
+          <Botao texto="Usar data e hora" accessibilityLabel="Usar data e hora escolhidas" onPress={concluir} />
         </View>
       </View>
     </Modal>}

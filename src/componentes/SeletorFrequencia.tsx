@@ -19,7 +19,7 @@ export function SeletorFrequencia({ value, onChange }: Props) {
     onChange({ tipo: 'diasDaSemana', dias: proximos });
   };
   return (
-    <View>
+    <View style={estilos.campo}>
       <Rotulo>Quando usar</Rotulo>
       <Text style={estilos.ajudaCampo}>Com que frequência você usa este medicamento?</Text>
       <View style={estilos.escolhas}>

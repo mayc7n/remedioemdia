@@ -11,6 +11,7 @@ import { Inicio } from './telas/Inicio';
 import { Historico } from './telas/Historico';
 import { Mais } from './telas/Mais';
 import { Navegacao } from './componentes/Navegacao';
+import { espacamentos, raios, tamanhos } from './componentes/tema';
 
 const medicamento: Medicamento = {
   id: 'm1',
@@ -24,6 +25,18 @@ const medicamento: Medicamento = {
 };
 
 describe('acessibilidade dos fluxos críticos', () => {
+  it('centraliza espaçamento, raios e tamanho mínimo de toque', () => {
+    expect(espacamentos).toEqual({ xxs: 4, xs: 8, sm: 12, md: 16, lg: 20, xl: 24, xxl: 32 });
+    expect(raios).toMatchObject({ pequeno: 8, medio: 10, grande: 12 });
+    expect(tamanhos.toqueMinimo).toBe(48);
+  });
+
+  it('usa ícone real para remover horário', async () => {
+    const tela = await render(<HorarioPicker indice={0} valor="08:00" onChange={jest.fn()} remover={jest.fn()} />);
+    expect(tela.getByRole('button', { name: 'Remover horário 1' })).toBeTruthy();
+    expect(tela.queryByText('×')).toBeNull();
+  });
+
   it('expõe ações de medicamento com role e label completos', async () => {
     const tela = await render(<DetalheMedicamento medicamento={medicamento} registros={[]} onSalvar={jest.fn()} onPausar={jest.fn()} onExcluir={jest.fn()} />);
     expect(tela.getByRole('button', { name: 'Pausar lembretes' })).toBeTruthy();

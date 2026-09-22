@@ -1,5 +1,15 @@
 import { StyleSheet } from 'react-native';
 
+export const espacamentos = { xxs: 4, xs: 8, sm: 12, md: 16, lg: 20, xl: 24, xxl: 32 } as const;
+export const raios = { pequeno: 8, medio: 10, grande: 12 } as const;
+export const tamanhos = { toqueMinimo: 48, conteudoMaximo: 720, navegacaoBase: 62 } as const;
+export const tipografia = {
+  titulo: { fontSize: 28, lineHeight: 34, fontWeight: '700' as const },
+  secao: { fontSize: 17, lineHeight: 23, fontWeight: '700' as const },
+  corpo: { fontSize: 16, lineHeight: 23 },
+  secundario: { fontSize: 14, lineHeight: 20 },
+} as const;
+
 // Sistema de cores: base neutra e quente, verde-pinho para ações e
 // terracota reservado ao destaque da próxima dose.
 export const cores = {
@@ -19,54 +29,63 @@ export const cores = {
 };
 
 export const estilos = StyleSheet.create({
-  botao: { minHeight: 48, borderRadius: 12, paddingHorizontal: 17, alignItems: 'center', justifyContent: 'center', marginTop: 10 },
+  tela: { flex: 1, backgroundColor: cores.fundo },
+  conteudo: { width: '100%', maxWidth: tamanhos.conteudoMaximo, alignSelf: 'center', paddingHorizontal: espacamentos.lg },
+  modalBackdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(35,31,27,0.32)' },
+  modalFolha: { maxHeight: '88%', backgroundColor: cores.fundo, borderTopLeftRadius: raios.grande, borderTopRightRadius: raios.grande, padding: espacamentos.lg, paddingBottom: espacamentos.xxl },
+  campoMultilinha: { minHeight: 96, paddingTop: 14 },
+  botaoConteudo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', flexShrink: 1, gap: espacamentos.xs },
+  acaoSecundaria: { color: cores.verde, fontSize: 15, fontWeight: '600' },
+  divisor: { borderBottomWidth: 1, borderBottomColor: cores.borda },
+
+  botao: { minHeight: tamanhos.toqueMinimo, borderRadius: raios.grande, paddingHorizontal: 17, alignItems: 'center', justifyContent: 'center', marginTop: espacamentos.sm },
   botaoPrimario: { backgroundColor: cores.verde },
   botaoSuave: { backgroundColor: cores.verdeClaro },
   botaoPerigo: { backgroundColor: cores.vermelhoClaro, borderWidth: 1, borderColor: '#DDB2A8' },
-  botaoTexto: { backgroundColor: 'transparent', paddingHorizontal: 5 },
-  textoBotao: { color: cores.branco, fontSize: 16, fontWeight: '600' },
+  botaoTexto: { backgroundColor: 'transparent', paddingHorizontal: espacamentos.xxs },
+  textoBotao: { flexShrink: 1, color: cores.branco, fontSize: tipografia.corpo.fontSize, lineHeight: tipografia.corpo.lineHeight, fontWeight: '600', textAlign: 'center' },
   textoBotaoSuave: { color: cores.texto },
   textoBotaoTexto: { color: cores.destaque, textDecorationLine: 'underline' },
   pressionado: { opacity: 0.7 },
   desativado: { opacity: 0.45 },
 
-  campo: { marginTop: 18 },
-  label: { color: cores.texto, fontSize: 15, fontWeight: '600', marginBottom: 7 },
-  input: { minHeight: 52, borderWidth: 1, borderColor: cores.borda, borderRadius: 12, backgroundColor: cores.branco, paddingHorizontal: 14, color: cores.texto, fontSize: 17 },
-  erro: { color: cores.vermelho, fontSize: 14, marginTop: 6 },
-  escolhas: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
+  campo: { marginTop: espacamentos.lg },
+  label: { color: cores.texto, fontSize: 15, fontWeight: '600', marginBottom: espacamentos.xs },
+  input: { minHeight: 52, borderWidth: 1, borderColor: cores.borda, borderRadius: raios.grande, backgroundColor: cores.branco, paddingHorizontal: 14, color: cores.texto, fontSize: tipografia.secao.fontSize },
+  erro: { color: cores.vermelho, ...tipografia.secundario, marginTop: espacamentos.xs },
+  escolhas: { flexDirection: 'row', flexWrap: 'wrap', gap: espacamentos.xs },
   selecionado: { borderWidth: 2, borderColor: cores.verde },
 
-  horarioLinha: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
+  horarioLinha: { flexDirection: 'row', alignItems: 'center', gap: espacamentos.sm, marginBottom: espacamentos.sm },
   horarioIndice: { width: 34, height: 34, borderRadius: 17, backgroundColor: cores.verdeClaro, alignItems: 'center', justifyContent: 'center' },
   horarioNumero: { color: cores.verde, fontSize: 12, fontWeight: '600' },
   horarioConteudo: { flex: 1 },
-  horarioBotao: { minHeight: 60, borderWidth: 1, borderColor: cores.borda, borderRadius: 12, backgroundColor: cores.branco, paddingHorizontal: 15, paddingVertical: 9, justifyContent: 'center' },
+  horarioBotao: { minHeight: 60, borderWidth: 1, borderColor: cores.borda, borderRadius: raios.grande, backgroundColor: cores.branco, paddingHorizontal: 15, paddingVertical: 9, justifyContent: 'center' },
   horarioValor: { color: cores.texto, fontSize: 22, fontWeight: '700', fontVariant: ['tabular-nums'], letterSpacing: 0.5 },
   horarioDica: { color: cores.mutado, fontSize: 12, marginTop: 2 },
-  horarioRemover: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
+  horarioRemover: { width: tamanhos.toqueMinimo, height: tamanhos.toqueMinimo, alignItems: 'center', justifyContent: 'center' },
   horarioRemoverTexto: { color: cores.vermelho, fontSize: 28, fontWeight: '300' },
 
   pickerBackdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(35,31,27,0.32)' },
-  pickerFolha: { backgroundColor: cores.fundo, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 22, paddingBottom: 28 },
-  pickerAcao: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
-  pickerCancelar: { color: cores.verde, fontSize: 14, fontWeight: '600', padding: 8 },
-  modalFechar: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
+  pickerFolha: { backgroundColor: cores.fundo, borderTopLeftRadius: raios.grande, borderTopRightRadius: raios.grande, padding: espacamentos.lg, paddingBottom: espacamentos.xxl },
+  pickerAcao: { minWidth: tamanhos.toqueMinimo, minHeight: tamanhos.toqueMinimo, alignItems: 'center', justifyContent: 'center' },
+  pickerCancelar: { color: cores.verde, ...tipografia.secundario, fontWeight: '600', padding: espacamentos.xs },
+  modalFechar: { minWidth: tamanhos.toqueMinimo, minHeight: tamanhos.toqueMinimo, alignItems: 'center', justifyContent: 'center' },
 
-  cartao: { backgroundColor: cores.branco, borderRadius: 14, padding: 17, marginBottom: 12, borderWidth: 1, borderColor: cores.borda },
-  linhaEntre: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 },
+  cartao: { backgroundColor: cores.branco, borderRadius: raios.grande, padding: 17, marginBottom: espacamentos.sm, borderWidth: 1, borderColor: cores.borda },
+  linhaEntre: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: espacamentos.sm },
   flexivel: { flex: 1 },
-  titulo: { color: cores.texto, fontSize: 24, lineHeight: 30, fontWeight: '700', marginTop: 10, marginBottom: 4 },
-  lead: { color: cores.mutado, fontSize: 16, lineHeight: 23, marginBottom: 18 },
-  nome: { color: cores.texto, fontSize: 17, fontWeight: '600' },
-  secundario: { color: cores.mutado, fontSize: 14, lineHeight: 20 },
+  titulo: { color: cores.texto, ...tipografia.titulo, marginTop: espacamentos.sm, marginBottom: espacamentos.xxs },
+  lead: { color: cores.mutado, ...tipografia.corpo, marginBottom: espacamentos.lg },
+  nome: { color: cores.texto, fontSize: tipografia.secao.fontSize, fontWeight: '600' },
+  secundario: { color: cores.mutado, ...tipografia.secundario },
   ajuda: { color: cores.mutado, fontSize: 15, lineHeight: 22, marginVertical: 14 },
-  ajudaCampo: { color: cores.mutado, fontSize: 14, lineHeight: 20, marginTop: -3, marginBottom: 12 },
-  secaoTitulo: { color: cores.texto, fontSize: 17, fontWeight: '700', marginTop: 22, marginBottom: 4 },
-  vazio: { backgroundColor: cores.branco, borderRadius: 14, padding: 18, borderWidth: 1, borderColor: cores.borda, marginTop: 10, marginBottom: 16 },
+  ajudaCampo: { color: cores.mutado, ...tipografia.secundario, marginTop: -3, marginBottom: espacamentos.sm },
+  secaoTitulo: { color: cores.texto, ...tipografia.secao, marginTop: 22, marginBottom: espacamentos.xxs },
+  vazio: { backgroundColor: cores.branco, borderRadius: raios.grande, padding: 18, borderWidth: 1, borderColor: cores.borda, marginTop: espacamentos.sm, marginBottom: espacamentos.md },
   seta: { color: cores.mutado, fontSize: 26, lineHeight: 24, fontWeight: '300' },
 
-  proximaDose: { flexDirection: 'row', alignItems: 'center', backgroundColor: cores.destaqueClaro, borderRadius: 14, padding: 16, marginTop: 6, marginBottom: 4, gap: 14 },
+  proximaDose: { flexDirection: 'row', alignItems: 'center', backgroundColor: cores.destaqueClaro, borderRadius: raios.grande, padding: espacamentos.md, marginTop: 6, marginBottom: espacamentos.xxs, gap: 14 },
   proximaDoseHorario: { color: cores.destaque, fontSize: 20, fontWeight: '700', fontVariant: ['tabular-nums'] },
   proximaDoseLegenda: { color: cores.destaque, fontSize: 12, marginTop: 2 },
   proximaDoseNome: { color: cores.texto, fontSize: 18, fontWeight: '600' },
@@ -95,7 +114,7 @@ export const estilos = StyleSheet.create({
   observacaoLista: { color: cores.mutado, fontSize: 14, lineHeight: 20, marginTop: 6 },
 
   historicoItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: cores.borda, gap: 12 },
-  historicoFiltros: { backgroundColor: cores.branco, borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: cores.borda },
+  historicoFiltros: { backgroundColor: cores.branco, borderRadius: raios.grande, padding: 14, marginBottom: espacamentos.md, borderWidth: 1, borderColor: cores.borda },
   historicoPeriodoLabel: { marginTop: 16 },
   historicoMarcador: { width: 9, height: 9, borderRadius: 5 },
   historicoMarcadorTomado: { backgroundColor: cores.verde },
@@ -111,5 +130,5 @@ export const estilos = StyleSheet.create({
   boasVindasMarca: { color: cores.verde, fontWeight: '600', fontSize: 16, marginBottom: 32 },
   boasVindasTitulo: { color: cores.texto, fontSize: 30, lineHeight: 37, fontWeight: '700' },
   boasVindasTexto: { color: cores.mutado, fontSize: 17, lineHeight: 25, marginTop: 14, marginBottom: 20 },
-  avisoClinico: { backgroundColor: cores.verdeClaro, borderRadius: 12, padding: 16, marginVertical: 16, borderLeftWidth: 3, borderLeftColor: cores.verde },
+  avisoClinico: { backgroundColor: cores.verdeClaro, borderRadius: raios.grande, padding: espacamentos.md, marginVertical: espacamentos.md, borderLeftWidth: 3, borderLeftColor: cores.verde },
 });

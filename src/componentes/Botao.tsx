@@ -1,4 +1,4 @@
-import { Pressable, Text, type AccessibilityState } from 'react-native';
+import { Pressable, Text, View, type AccessibilityState } from 'react-native';
 import { estilos } from './tema';
 
 export type VarianteBotao = 'primario' | 'suave' | 'perigo' | 'texto';
@@ -31,7 +31,9 @@ export function Botao({ texto, onPress, variante = 'primario', desativado = fals
       onPress={onPress}
       style={({ pressed }) => [estilos.botao, estiloVariante, pressed && estilos.pressionado, desativado && estilos.desativado]}
     >
-      <Text allowFontScaling style={[estilos.textoBotao, variante === 'suave' && estilos.textoBotaoSuave, variante === 'texto' && estilos.textoBotaoTexto]}>{texto}</Text>
+      <View style={estilos.botaoConteudo}>
+        <Text allowFontScaling style={[estilos.textoBotao, variante === 'suave' && estilos.textoBotaoSuave, variante === 'texto' && estilos.textoBotaoTexto]}>{texto}</Text>
+      </View>
     </Pressable>
   );
 }

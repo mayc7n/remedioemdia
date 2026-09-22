@@ -1,4 +1,5 @@
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState } from 'react';
 import { Modal, Platform, Pressable, Text, View } from 'react-native';
 import { Botao } from './Botao';
@@ -48,10 +49,10 @@ export function HorarioPicker({ indice, valor, onChange, remover }: Props) {
         <Text style={estilos.horarioDica}>Toque para escolher</Text>
       </Pressable>
     </View>
-    {remover && <Pressable accessibilityRole="button" accessibilityLabel={`Remover horário ${indice + 1}`} onPress={remover} hitSlop={4} style={estilos.horarioRemover}><Text style={estilos.horarioRemoverTexto}>×</Text></Pressable>}
+    {remover && <Pressable accessibilityRole="button" accessibilityLabel={`Remover horário ${indice + 1}`} onPress={remover} hitSlop={4} style={estilos.horarioRemover}><Ionicons name="remove-circle-outline" size={24} color={cores.vermelho} accessible={false} /></Pressable>}
     {aberto && Platform.OS === 'ios' && <Modal transparent animationType="slide" visible onRequestClose={() => setAberto(false)}>
-      <View style={estilos.pickerBackdrop}>
-        <View style={estilos.pickerFolha}>
+      <View style={estilos.modalBackdrop}>
+        <View style={estilos.modalFolha}>
           <View style={estilos.linhaEntre}><View><Text style={estilos.nome}>Escolha o horário</Text><Text style={estilos.secundario}>O lembrete será salvo neste horário.</Text></View><Pressable accessibilityRole="button" accessibilityLabel="Fechar seletor de horário" onPress={() => setAberto(false)} style={estilos.pickerAcao}><Text style={estilos.pickerCancelar}>Fechar</Text></Pressable></View>
           <DateTimePicker value={rascunho} mode="time" display="spinner" onChange={(_, data) => data && setRascunho(data)} locale="pt-BR" />
           <Botao texto="Usar este horário" onPress={confirmarIos} />
