@@ -1,10 +1,10 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, AppState, Linking, Platform, ScrollView, Text, View } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Botao } from './src/componentes/Botao';
 import { Navegacao } from './src/componentes/Navegacao';
-import { cores, espacamentos, estilos, tamanhos } from './src/componentes/tema';
+import { cores, espacamentos, estilos } from './src/componentes/tema';
 import { carregarEstado, salvarEstado } from './src/dados/armazenamento';
 import {
   Consulta,
@@ -63,7 +63,6 @@ const atualizarAgenda = (estado: EstadoApp, medicamento: Medicamento) => {
 };
 
 export default function App() {
-  const insets = useSafeAreaInsets();
   const [estado, setEstado] = useState<EstadoApp>(estadoInicial);
   const [aba, setAba] = useState<Aba>('inicio');
   const [modal, setModal] = useState<ModalAtivo>(null);
@@ -303,7 +302,7 @@ export default function App() {
 
   return <SafeAreaView edges={['top', 'left', 'right']} style={estilos.tela}>
     <StatusBar style="dark" />
-    <ScrollView contentContainerStyle={[estilos.conteudo, { paddingTop: espacamentos.lg, paddingBottom: tamanhos.navegacaoBase + insets.bottom + espacamentos.lg }]}>
+    <ScrollView style={estilos.flexivel} contentContainerStyle={[estilos.conteudo, { paddingTop: espacamentos.lg, paddingBottom: espacamentos.lg }]}>
       {aba === 'inicio' && <Inicio ocorrencias={ocorrencias} registros={estado.registros} consultas={consultasFuturas} marcar={marcar} abrirMedicamento={() => setMedicamentoAberto('novo')} desfazerDisponivel={Boolean(desfazerPendente)} desfazer={desfazer} />}
       {aba === 'medicamentos' && <Medicamentos medicamentos={estado.medicamentos} abrirDetalhe={setMedicamentoAberto} abrirNovo={() => setMedicamentoAberto('novo')} />}
       {aba === 'historico' && <Historico registros={estado.registros} />}

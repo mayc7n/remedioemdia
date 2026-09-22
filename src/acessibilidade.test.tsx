@@ -83,6 +83,7 @@ describe('acessibilidade dos fluxos críticos', () => {
     );
 
     expect(tela.getByTestId('navegacao-inferior')).toHaveStyle({ paddingBottom: 34 });
+    expect(tela.getByTestId('navegacao-inferior')).not.toHaveStyle({ position: 'absolute' });
     expect(tela.getByRole('tab', { name: 'Remédios' }).props.accessibilityState).toEqual({ selected: true });
     expect(tela.getByRole('tab', { name: 'Hoje' }).props.accessibilityState).toEqual({ selected: false });
   });
