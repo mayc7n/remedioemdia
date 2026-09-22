@@ -56,8 +56,9 @@ jest.mock('expo-notifications', () => ({
 }));
 
 const estadoBase: EstadoApp = {
-  versao: 2,
+  versao: 3,
   concluiuBoasVindas: true,
+  modoCuidador: 'naoInformado',
   mostrarDetalhesNotificacao: false,
   medicamentos: [],
   registros: [],

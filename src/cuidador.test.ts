@@ -1,13 +1,20 @@
 import { EstadoApp } from './dominio/agenda';
-import { revogarCuidador, salvarCuidadorComConsentimento, resumoCompartilhamento } from './cuidador';
+import { definirModoCuidador, revogarCuidador, salvarCuidadorComConsentimento, resumoCompartilhamento } from './cuidador';
 
 const estado: EstadoApp = {
-  versao: 2,
+  versao: 3,
   concluiuBoasVindas: true,
+  modoCuidador: 'naoInformado',
   mostrarDetalhesNotificacao: false,
   medicamentos: [],
   registros: [],
   consultas: [],
+};
+
+const dadosCuidador = {
+  nome: 'Ana',
+  contato: 'ana@example.com',
+  avisos: { esquecido: true, adiado: true, consulta: true },
 };
 
 describe('cuidador local', () => {
@@ -28,5 +35,26 @@ describe('cuidador local', () => {
     const revogado = revogarCuidador(autorizado, true);
     expect(revogado.cuidador).toMatchObject({ consentimentoAtivo: false, avisos: { esquecido: false, adiado: false, consulta: false } });
     expect(resumoCompartilhamento(revogado.cuidador)).toContain('Autorização revogada');
+  });
+
+  it('habilita o fluxo sem autorizar automaticamente um cuidador', () => {
+    const resultado = definirModoCuidador(estado, 'comCuidador', false);
+
+    expect(resultado).toMatchObject({ modoCuidador: 'comCuidador' });
+    expect(resultado.cuidador).toBeUndefined();
+  });
+
+  it('não muda para uso individual sem confirmar a revogação ativa', () => {
+    const autorizado = salvarCuidadorComConsentimento(estado, dadosCuidador, true);
+
+    expect(definirModoCuidador(autorizado, 'semCuidador', false)).toBe(autorizado);
+  });
+
+  it('revoga avisos ao confirmar a mudança para uso individual', () => {
+    const autorizado = salvarCuidadorComConsentimento(estado, dadosCuidador, true);
+    const resultado = definirModoCuidador(autorizado, 'semCuidador', true);
+
+    expect(resultado.modoCuidador).toBe('semCuidador');
+    expect(resultado.cuidador).toMatchObject({ consentimentoAtivo: false, avisos: { esquecido: false, adiado: false, consulta: false } });
   });
 });

@@ -7,6 +7,7 @@ jest.mock('expo-secure-store', () => ({
 }));
 
 const getItemAsync = SecureStore.getItemAsync as jest.MockedFunction<typeof SecureStore.getItemAsync>;
+const setItemAsync = SecureStore.setItemAsync as jest.MockedFunction<typeof SecureStore.setItemAsync>;
 
 describe('armazenamento do estado', () => {
   beforeEach(() => {
@@ -23,8 +24,25 @@ describe('armazenamento do estado', () => {
 
     const estado = await carregarEstado();
 
-    expect(estado.versao).toBe(2);
+    expect(estado.versao).toBe(3);
     expect(estado.medicamentos[0].situacao).toBe('ativo');
+  });
+
+  it('persiste a migração de um estado v2 como versão 3', async () => {
+    getItemAsync.mockResolvedValue(JSON.stringify({
+      versao: 2,
+      concluiuBoasVindas: true,
+      medicamentos: [],
+      registros: [],
+      consultas: [],
+    }));
+
+    await carregarEstado();
+
+    expect(setItemAsync).toHaveBeenCalledWith(
+      'remedio-em-dia-estado-v1',
+      expect.stringContaining('"versao":3'),
+    );
   });
 
   it('retorna estado inicial quando o JSON está inválido', async () => {
@@ -32,6 +50,6 @@ describe('armazenamento do estado', () => {
 
     const estado = await carregarEstado();
 
-    expect(estado).toMatchObject({ versao: 2, medicamentos: [], registros: [], consultas: [] });
+    expect(estado).toMatchObject({ versao: 3, modoCuidador: 'naoInformado', medicamentos: [], registros: [], consultas: [] });
   });
 });

@@ -1,4 +1,4 @@
-import { EstadoApp, Cuidador } from './dominio/agenda';
+import { EstadoApp, Cuidador, ModoCuidador } from './dominio/agenda';
 
 export type DadosCuidador = Pick<Cuidador, 'nome' | 'contato' | 'avisos'>;
 
@@ -6,6 +6,7 @@ export function salvarCuidadorComConsentimento(estado: EstadoApp, dados: DadosCu
   if (!confirmacao) return estado;
   return {
     ...estado,
+    modoCuidador: 'comCuidador',
     cuidador: {
       nome: dados.nome.trim(),
       contato: dados.contato.trim(),
@@ -14,6 +15,17 @@ export function salvarCuidadorComConsentimento(estado: EstadoApp, dados: DadosCu
       avisos: { ...dados.avisos },
     },
   };
+}
+
+export function definirModoCuidador(
+  estado: EstadoApp,
+  modo: Exclude<ModoCuidador, 'naoInformado'>,
+  confirmacaoRevogacao: boolean,
+): EstadoApp {
+  if (modo === 'comCuidador') return { ...estado, modoCuidador: modo };
+  if (estado.cuidador?.consentimentoAtivo && !confirmacaoRevogacao) return estado;
+  const revogado = estado.cuidador ? revogarCuidador(estado, true) : estado;
+  return { ...revogado, modoCuidador: 'semCuidador' };
 }
 
 export function revogarCuidador(estado: EstadoApp, confirmacao: boolean): EstadoApp {

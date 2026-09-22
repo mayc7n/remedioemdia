@@ -9,9 +9,45 @@ describe('agenda de medicamentos', () => {
     expect(normalizarEstado({ versao: 2, concluiuBoasVindas: true, mostrarDetalhesNotificacao: true, medicamentos: [], registros: [], consultas: [] }).mostrarDetalhesNotificacao).toBe(true);
   });
 
+  it('migra v2 com cuidador ativo para o modo com cuidador sem perder dados', () => {
+    const estado = normalizarEstado({
+      versao: 2,
+      concluiuBoasVindas: true,
+      mostrarDetalhesNotificacao: true,
+      medicamentos: [{ id: 'm1', nome: 'A', horarios: ['08:00'], frequencia: { tipo: 'diaria' }, situacao: 'ativo', criadoEm: '2026-09-18T00:00:00.000Z', atualizadoEm: '2026-09-18T00:00:00.000Z' }],
+      registros: [{ id: 'r1', medicamentoId: 'm1', medicamentoNome: 'A', horario: '08:00', previstoPara: '2026-09-18T08:00:00', estado: 'taken', origem: 'app' }],
+      consultas: [{ id: 'c1', tipo: 'consulta', titulo: 'Retorno', marcadoPara: '2026-09-22T10:00', lembretes: true, concluida: false }],
+      cuidador: { nome: 'Ana', contato: '11999999999', consentimentoAtivo: true, avisos: { esquecido: true, adiado: false, consulta: true } },
+    });
+
+    expect(estado).toMatchObject({ versao: 3, modoCuidador: 'comCuidador', mostrarDetalhesNotificacao: true });
+    expect(estado.medicamentos).toHaveLength(1);
+    expect(estado.registros).toHaveLength(1);
+    expect(estado.consultas).toHaveLength(1);
+  });
+
+  it('pede a escolha uma única vez ao migrar v2 sem cuidador ativo', () => {
+    expect(normalizarEstado({ versao: 2, concluiuBoasVindas: true, medicamentos: [], registros: [], consultas: [] }))
+      .toMatchObject({ versao: 3, modoCuidador: 'naoInformado' });
+  });
+
+  it('não oculta um consentimento ativo em estado v3 inconsistente', () => {
+    const estado = normalizarEstado({
+      versao: 3,
+      modoCuidador: 'semCuidador',
+      concluiuBoasVindas: true,
+      medicamentos: [],
+      registros: [],
+      consultas: [],
+      cuidador: { nome: 'Ana', contato: '11999999999', consentimentoAtivo: true, avisos: { esquecido: true, adiado: true, consulta: true } },
+    });
+
+    expect(estado.modoCuidador).toBe('comCuidador');
+  });
+
   it('desfaz uma ação recente sem apagar outros registros', () => {
     const medicamento: Medicamento = { id: 'm1', nome: 'A', horarios: ['08:00'], frequencia: { tipo: 'diaria' }, situacao: 'ativo', criadoEm: '2026-09-18T00:00:00.000Z', atualizadoEm: '2026-09-18T00:00:00.000Z' };
-    const estado: EstadoApp = { versao: 2, concluiuBoasVindas: true, mostrarDetalhesNotificacao: false, medicamentos: [medicamento], registros: [{ id: 'outro', medicamentoId: 'm1', medicamentoNome: 'A', horario: '20:00', previstoPara: '2026-09-18T20:00:00', estado: 'taken', origem: 'app' }], consultas: [] };
+    const estado: EstadoApp = { versao: 3, concluiuBoasVindas: true, modoCuidador: 'naoInformado', mostrarDetalhesNotificacao: false, medicamentos: [medicamento], registros: [{ id: 'outro', medicamentoId: 'm1', medicamentoNome: 'A', horario: '20:00', previstoPara: '2026-09-18T20:00:00', estado: 'taken', origem: 'app' }], consultas: [] };
     const marcado = aplicarAcaoNaOcorrencia(estado, 'm1-2026-09-18-08:00', 'taken', 'app');
 
     const desfeito = desfazerAcaoNaOcorrencia(marcado, 'm1-2026-09-18-08:00', 'taken');
@@ -66,7 +102,7 @@ describe('agenda de medicamentos', () => {
     };
 
     const estado = normalizarEstado(salvo);
-    expect(estado.versao).toBe(2);
+    expect(estado.versao).toBe(3);
     expect(estado.medicamentos[0].situacao).toBe('ativo');
     expect(estado.registros).toHaveLength(1);
   });
@@ -126,7 +162,7 @@ describe('agenda de medicamentos', () => {
       { id: 'm1', nome: 'Primeiro', horarios: ['08:00'], frequencia: { tipo: 'diaria' }, situacao: 'ativo', criadoEm: '2026-09-18T00:00:00.000Z', atualizadoEm: '2026-09-18T00:00:00.000Z' },
       { id: 'm1-extra', nome: 'Segundo', horarios: ['09:00'], frequencia: { tipo: 'diaria' }, situacao: 'ativo', criadoEm: '2026-09-18T00:00:00.000Z', atualizadoEm: '2026-09-18T00:00:00.000Z' },
     ];
-    const estado: EstadoApp = { versao: 2, concluiuBoasVindas: true, mostrarDetalhesNotificacao: false, medicamentos, registros: [], consultas: [] };
+    const estado: EstadoApp = { versao: 3, concluiuBoasVindas: true, modoCuidador: 'naoInformado', mostrarDetalhesNotificacao: false, medicamentos, registros: [], consultas: [] };
 
     const atualizado = aplicarAcaoNaOcorrencia(estado, 'm1-extra-2026-09-18-09:00', 'taken', 'app');
 

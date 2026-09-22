@@ -1,6 +1,7 @@
 export type EstadoRegistro = 'pendente' | 'taken' | 'snoozed' | 'missed';
 export type OrigemRegistro = 'app' | 'notification' | 'widget';
 export type SituacaoMedicamento = 'ativo' | 'pausado' | 'excluido';
+export type ModoCuidador = 'naoInformado' | 'semCuidador' | 'comCuidador';
 export type Frequencia =
   | { tipo: 'diaria' }
   | { tipo: 'diasDaSemana'; dias: number[] }
@@ -48,8 +49,9 @@ export type Cuidador = {
 };
 
 export type EstadoApp = {
-  versao: 2;
+  versao: 3;
   concluiuBoasVindas: boolean;
+  modoCuidador: ModoCuidador;
   mostrarDetalhesNotificacao: boolean;
   medicamentos: Medicamento[];
   registros: RegistroMedicamento[];
@@ -154,9 +156,16 @@ const normalizarCuidador = (valor: unknown): Cuidador | undefined => {
   };
 };
 
+const normalizarModoCuidador = (valor: unknown, cuidador?: Cuidador): ModoCuidador => {
+  if (cuidador?.consentimentoAtivo) return 'comCuidador';
+  if (valor === 'semCuidador' || valor === 'comCuidador') return valor;
+  return 'naoInformado';
+};
+
 export const estadoInicial: EstadoApp = {
-  versao: 2,
+  versao: 3,
   concluiuBoasVindas: false,
+  modoCuidador: 'naoInformado',
   mostrarDetalhesNotificacao: false,
   medicamentos: [],
   registros: [],
@@ -170,8 +179,9 @@ export const normalizarEstado = (entrada: unknown): EstadoApp => {
   const consultas = Array.isArray(entrada.consultas) ? entrada.consultas.map(normalizarConsulta).filter((item): item is Consulta => item !== null) : [];
   const cuidador = normalizarCuidador(entrada.cuidador);
   return {
-    versao: 2,
+    versao: 3,
     concluiuBoasVindas: entrada.concluiuBoasVindas === true,
+    modoCuidador: normalizarModoCuidador(entrada.modoCuidador, cuidador),
     mostrarDetalhesNotificacao: entrada.mostrarDetalhesNotificacao === true,
     medicamentos,
     registros,
