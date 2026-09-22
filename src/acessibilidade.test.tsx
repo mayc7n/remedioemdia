@@ -1,8 +1,9 @@
-import { render } from '@testing-library/react-native';
+import { fireEvent, render } from '@testing-library/react-native';
 import { Text } from 'react-native';
 import { Medicamento } from './dominio/agenda';
 import { Botao } from './componentes/Botao';
 import { CaixaModal } from './componentes/CaixaModal';
+import { DataHoraPicker } from './componentes/DataHoraPicker';
 import { HorarioPicker } from './componentes/HorarioPicker';
 import { SeletorFrequencia } from './componentes/SeletorFrequencia';
 import { CuidadorForm } from './telas/CuidadorForm';
@@ -12,6 +13,11 @@ import { Historico } from './telas/Historico';
 import { Mais } from './telas/Mais';
 import { Navegacao } from './componentes/Navegacao';
 import { espacamentos, raios, tamanhos } from './componentes/tema';
+
+jest.mock('@react-native-community/datetimepicker', () => ({
+  __esModule: true,
+  default: () => null,
+}));
 
 const medicamento: Medicamento = {
   id: 'm1',
@@ -35,6 +41,19 @@ describe('acessibilidade dos fluxos críticos', () => {
     const tela = await render(<HorarioPicker indice={0} valor="08:00" onChange={jest.fn()} remover={jest.fn()} />);
     expect(tela.getByRole('button', { name: 'Remover horário 1' })).toBeTruthy();
     expect(tela.queryByText('×')).toBeNull();
+  });
+
+  it('limita a altura somente na CaixaModal rolável, não nos pickers iOS', async () => {
+    const caixa = await render(<CaixaModal visivel fechar={jest.fn()} titulo="Exemplo"><Text>Conteúdo</Text></CaixaModal>);
+    expect(caixa.getByRole('button', { name: 'Fechar' }).parent?.parent).toHaveStyle({ maxHeight: '88%' });
+
+    const horario = await render(<HorarioPicker indice={0} valor="08:00" onChange={jest.fn()} />);
+    await fireEvent.press(horario.getByRole('button', { name: 'Escolher horário 1' }));
+    expect(horario.getByRole('button', { name: 'Usar este horário' }).parent).not.toHaveStyle({ maxHeight: '88%' });
+
+    const dataHora = await render(<DataHoraPicker valor="2026-09-21T08:00" onChange={jest.fn()} />);
+    await fireEvent.press(dataHora.getByRole('button', { name: 'Escolher data e hora' }));
+    expect(dataHora.getByRole('button', { name: 'Usar data e hora escolhidas' }).parent).not.toHaveStyle({ maxHeight: '88%' });
   });
 
   it('expõe ações de medicamento com role e label completos', async () => {

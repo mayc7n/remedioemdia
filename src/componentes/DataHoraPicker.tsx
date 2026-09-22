@@ -78,7 +78,7 @@ export function DataHoraPicker({ valor, onChange }: Props) {
 
     {aberto && Platform.OS === 'ios' && <Modal transparent animationType="slide" visible onRequestClose={() => setAberto(false)}>
       <View style={estilos.modalBackdrop}>
-        <View style={estilos.modalFolha}>
+        <View style={estilos.pickerFolha}>
           <View style={estilos.linhaEntre}><Text style={estilos.nome}>Escolha a data e a hora</Text><Pressable accessibilityRole="button" accessibilityLabel="Cancelar escolha de data e hora" onPress={() => setAberto(false)} style={estilos.pickerAcao}><Text style={estilos.pickerCancelar}>Cancelar</Text></Pressable></View>
           <DateTimePicker value={rascunho} mode="datetime" display="spinner" locale="pt-BR" onChange={(_, data) => data && setRascunho(data)} />
           <Botao texto="Usar data e hora" accessibilityLabel="Usar data e hora escolhidas" onPress={concluir} />
