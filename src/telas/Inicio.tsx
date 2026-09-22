@@ -1,11 +1,10 @@
 import { Alert, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Consulta, EstadoApp, RegistroMedicamento, ocorrenciasDoDia } from '../dominio/agenda';
 import { Botao } from '../componentes/Botao';
-import { estilos } from '../componentes/tema';
+import { EstadoRegistroVisual } from '../componentes/EstadoRegistro';
+import { cores, estilos } from '../componentes/tema';
 import { formatarDataHoraBrasileira } from '../componentes/DataHoraPicker';
-
-const estadoEmTexto = (estado: RegistroMedicamento['estado']) => estado === 'taken' ? 'Tomado' : estado === 'snoozed' ? 'Adiado' : estado === 'missed' ? 'Esquecido' : 'Pendente';
-const estadoIcone = (estado: RegistroMedicamento['estado']) => estado === 'taken' ? '✓' : estado === 'snoozed' ? '↻' : estado === 'missed' ? '!' : '○';
 
 type Props = {
   ocorrencias: ReturnType<typeof ocorrenciasDoDia>;
@@ -15,11 +14,14 @@ type Props = {
   abrirMedicamento: () => void;
   desfazerDisponivel: boolean;
   desfazer: () => void;
+  dataAtual?: Date;
 };
 
-export function Inicio({ ocorrencias, registros, consultas, marcar, abrirMedicamento, desfazerDisponivel, desfazer }: Props) {
+export function Inicio({ ocorrencias, registros, consultas, marcar, abrirMedicamento, desfazerDisponivel, desfazer, dataAtual }: Props) {
   const pendentes = ocorrencias.filter((item) => !registros.some((registro) => registro.id === item.id && registro.estado !== 'pendente'));
   const proximo = pendentes[0];
+  const demaisOcorrencias = proximo ? ocorrencias.filter((item) => item.id !== proximo.id) : ocorrencias;
+  const dataFormatada = (dataAtual ?? new Date()).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
   const marcarAcao = (item: ReturnType<typeof ocorrenciasDoDia>[number], acao: 'taken' | 'snoozed' | 'missed') => {
     if (acao !== 'missed') {
       marcar(item, acao);
@@ -30,42 +32,54 @@ export function Inicio({ ocorrencias, registros, consultas, marcar, abrirMedicam
       { text: 'Esqueci', style: 'destructive', onPress: () => marcar(item, 'missed') },
     ]);
   };
+  const acoesDoRegistro = (item: ReturnType<typeof ocorrenciasDoDia>[number]) => <View testID={`acoes-${item.id}`} style={estilos.rotinaAcoes}>
+    <Botao texto="Tomei" onPress={() => marcarAcao(item, 'taken')} accessibilityLabel="Registrar como tomado" />
+    <Botao texto="Adiar" variante="suave" onPress={() => marcarAcao(item, 'snoozed')} accessibilityLabel="Adiar lembrete" />
+    <Botao texto="Esqueci" variante="texto" onPress={() => marcarAcao(item, 'missed')} accessibilityLabel="Registrar como esquecido" />
+  </View>;
 
   return <View>
-    {desfazerDisponivel && <View style={estilos.cartao}><Text style={estilos.secundario}>Ação registrada. Você pode desfazer por alguns segundos.</Text><Botao texto="Desfazer" variante="texto" onPress={desfazer} accessibilityLabel="Desfazer marcação" accessibilityHint="Reverte a última marcação do histórico" /></View>}
+    <Text allowFontScaling style={estilos.titulo}>Hoje</Text>
+    <Text allowFontScaling style={estilos.dataHoje}>{dataFormatada}</Text>
+    {desfazerDisponivel && <View style={estilos.avisoDesfazer}><Text allowFontScaling style={estilos.secundario}>Ação registrada. Você pode desfazer por alguns segundos.</Text><Botao texto="Desfazer" variante="texto" onPress={desfazer} accessibilityLabel="Desfazer marcação" accessibilityHint="Reverte a última marcação do histórico" /></View>}
     {ocorrencias.length === 0 ? <>
-      <Text style={estilos.titulo}>Hoje</Text>
       <View style={estilos.vazio}>
-        <Text style={estilos.nome}>Nenhum lembrete para hoje</Text>
-        <Text style={estilos.secundario}>Quando você cadastrar um medicamento, os horários de hoje aparecem aqui.</Text>
+        <Text allowFontScaling style={estilos.nome}>Nenhum lembrete para hoje</Text>
+        <Text allowFontScaling style={estilos.secundario}>Quando você cadastrar um medicamento, os horários de hoje aparecem aqui.</Text>
         <Botao texto="Adicionar medicamento" onPress={abrirMedicamento} />
       </View>
     </> : <>
-      <Text style={estilos.titulo}>Hoje</Text>
-      {proximo && <View style={estilos.proximaDose} accessibilityLabel={`Próxima dose: ${proximo.medicamentoNome} às ${proximo.horario}`}>
-        <View>
-          <Text style={estilos.proximaDoseHorario}>{proximo.horario}</Text>
-          <Text style={estilos.proximaDoseLegenda}>próxima dose</Text>
+      {proximo && <View style={estilos.proximaDose}>
+        <View style={estilos.proximaDoseCabecalho}>
+          <Text allowFontScaling style={estilos.proximaDoseLegenda}>Próximo lembrete</Text>
+          <EstadoRegistroVisual estado="pendente" compacto />
         </View>
-        <View style={estilos.flexivel}>
-          <Text style={estilos.proximaDoseNome}>{proximo.medicamentoNome}</Text>
-          <Text style={estilos.proximaDoseTexto}>{pendentes.length > 1 ? `Mais ${pendentes.length - 1} ${pendentes.length - 1 === 1 ? 'lembrete' : 'lembretes'} depois deste` : 'Último lembrete de hoje'}</Text>
+        <View style={estilos.proximaDoseIdentificacao}>
+          <Text allowFontScaling style={estilos.proximaDoseHorario}>{proximo.horario}</Text>
+          <View style={estilos.flexivel}>
+            <Text allowFontScaling style={estilos.proximaDoseNome}>{proximo.medicamentoNome}</Text>
+            <Text allowFontScaling style={estilos.proximaDoseTexto}>{pendentes.length > 1 ? `Mais ${pendentes.length - 1} ${pendentes.length - 1 === 1 ? 'lembrete' : 'lembretes'} depois deste` : 'Último lembrete de hoje'}</Text>
+          </View>
         </View>
+        {acoesDoRegistro(proximo)}
       </View>}
 
-      <Text style={estilos.secaoTitulo}>Horários de hoje</Text>
-      {ocorrencias.map((item) => {
+      <Text allowFontScaling style={estilos.secaoTitulo}>Horários de hoje</Text>
+      {demaisOcorrencias.map((item) => {
         const registro = registros.find((atual) => atual.id === item.id);
         const finalizado = Boolean(registro?.estado && registro.estado !== 'pendente');
-        const estado = finalizado ? registro!.estado : 'pendente';
+        const estado: RegistroMedicamento['estado'] = finalizado ? registro!.estado : 'pendente';
         return <View key={item.id} style={estilos.rotinaItem}>
-          <View style={estilos.rotinaLinha}><Text style={estilos.horarioLista}>{item.horario}</Text><View style={estilos.rotinaConteudo}><Text style={estilos.nome}>{item.medicamentoNome}</Text><Text style={estilos.statusTexto}>{estadoIcone(estado)} {estadoEmTexto(estado)}</Text></View></View>
-          <View testID={`acoes-${item.id}`} style={estilos.rotinaAcoes}><Botao texto="Tomei" variante="suave" onPress={() => marcarAcao(item, 'taken')} desativado={finalizado} /><Botao texto="Adiar" variante="suave" onPress={() => marcarAcao(item, 'snoozed')} desativado={finalizado} /><Botao texto="Esqueci" variante="texto" onPress={() => marcarAcao(item, 'missed')} desativado={finalizado} /></View>
+          <View style={estilos.rotinaLinha}><Text allowFontScaling style={estilos.horarioLista}>{item.horario}</Text><View style={estilos.rotinaConteudo}><Text allowFontScaling style={estilos.nome}>{item.medicamentoNome}</Text><EstadoRegistroVisual estado={estado} compacto /></View></View>
+          {!finalizado && acoesDoRegistro(item)}
         </View>;
       })}
     </>}
 
-    <Text style={estilos.secaoTitulo}>Próximos compromissos</Text>
-    {consultas.length === 0 ? <Text style={estilos.secundario}>Nenhuma consulta ou exame cadastrado.</Text> : consultas.slice(0, 2).map((consulta) => <View key={consulta.id} style={estilos.compromisso}><Text style={estilos.nome}>{consulta.titulo}</Text><Text style={estilos.secundario}>{formatarDataHoraBrasileira(consulta.marcadoPara)} · {consulta.tipo === 'exame' ? 'Exame' : 'Consulta'}</Text></View>)}
+    <Text allowFontScaling style={estilos.secaoTitulo}>Próximos compromissos</Text>
+    {consultas.length === 0 ? <Text allowFontScaling style={estilos.secundario}>Nenhuma consulta ou exame cadastrado.</Text> : consultas.slice(0, 2).map((consulta) => <View key={consulta.id} style={estilos.compromisso}>
+      <Ionicons name="calendar-outline" size={22} color={cores.destaque} accessible={false} />
+      <View style={estilos.flexivel}><Text allowFontScaling style={estilos.nome}>{consulta.titulo}</Text><Text allowFontScaling style={estilos.secundario}>{formatarDataHoraBrasileira(consulta.marcadoPara)} · {consulta.tipo === 'exame' ? 'Exame' : 'Consulta'}</Text></View>
+    </View>)}
   </View>;
 }

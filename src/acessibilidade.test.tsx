@@ -95,10 +95,10 @@ describe('acessibilidade dos fluxos críticos', () => {
 
   it('mantém ações da rotina acessíveis na lista inicial', async () => {
     const tela = await render(<Inicio ocorrencias={[{ id: 'm1-2026-09-18-08:00', medicamentoId: 'm1', medicamentoNome: 'Remédio', horario: '08:00', previstoPara: '2026-09-18T08:00:00' }]} registros={[]} consultas={[]} marcar={jest.fn()} abrirMedicamento={jest.fn()} desfazerDisponivel={false} desfazer={jest.fn()} />);
-    expect(tela.getByRole('button', { name: 'Tomei' })).toBeTruthy();
-    expect(tela.getByRole('button', { name: 'Adiar' })).toBeTruthy();
-    expect(tela.getByRole('button', { name: 'Esqueci' })).toBeTruthy();
-    expect(tela.getByText('○ Pendente')).toBeTruthy();
+    expect(tela.getByRole('button', { name: 'Registrar como tomado' })).toHaveStyle({ minHeight: 48 });
+    expect(tela.getByRole('button', { name: 'Adiar lembrete' })).toHaveStyle({ minHeight: 48 });
+    expect(tela.getByRole('button', { name: 'Registrar como esquecido' })).toHaveStyle({ minHeight: 48 });
+    expect(tela.getByTestId('estado-pendente')).toBeTruthy();
   });
 
   it('mantém alvos de toque mínimos e permite fonte ampliada nos controles', async () => {
