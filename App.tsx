@@ -1,10 +1,10 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, AppState, Linking, Platform, ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Botao } from './src/componentes/Botao';
 import { Navegacao } from './src/componentes/Navegacao';
-import { cores, estilos } from './src/componentes/tema';
+import { cores, espacamentos, estilos, tamanhos } from './src/componentes/tema';
 import { carregarEstado, salvarEstado } from './src/dados/armazenamento';
 import {
   Consulta,
@@ -48,7 +48,6 @@ const JANELA_DESFAZER_MS = 8000;
 
 const idNovo = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 const hoje = () => new Date();
-const dataHoje = () => hoje().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
 
 const medicamentoNovo = (): Medicamento => {
   const agora = new Date().toISOString();
@@ -64,6 +63,7 @@ const atualizarAgenda = (estado: EstadoApp, medicamento: Medicamento) => {
 };
 
 export default function App() {
+  const insets = useSafeAreaInsets();
   const [estado, setEstado] = useState<EstadoApp>(estadoInicial);
   const [aba, setAba] = useState<Aba>('inicio');
   const [modal, setModal] = useState<ModalAtivo>(null);
@@ -301,10 +301,9 @@ export default function App() {
 
   if (medicamentoSelecionado) return <SafeAreaView style={{ flex: 1, backgroundColor: cores.fundo }}><StatusBar style="dark" /><View style={{ flex: 1, padding: 22 }}><Botao texto="Voltar para medicamentos" variante="texto" onPress={() => setMedicamentoAberto(null)} /><DetalheMedicamento medicamento={medicamentoSelecionado} novo={medicamentoSelecionado.id === 'novo'} registros={estado.registros} onSalvar={salvarMedicamento} onPausar={mudarSituacao} onExcluir={excluirMedicamento} /></View></SafeAreaView>;
 
-  return <SafeAreaView style={{ flex: 1, backgroundColor: cores.fundo }}>
+  return <SafeAreaView edges={['top', 'left', 'right']} style={estilos.tela}>
     <StatusBar style="dark" />
-    <ScrollView contentContainerStyle={{ padding: 22, paddingBottom: 100 }}>
-      <Text style={[estilos.secundario, { textTransform: 'capitalize' }]}>{dataHoje()}</Text>
+    <ScrollView contentContainerStyle={[estilos.conteudo, { paddingTop: espacamentos.lg, paddingBottom: tamanhos.navegacaoBase + insets.bottom + espacamentos.lg }]}>
       {aba === 'inicio' && <Inicio ocorrencias={ocorrencias} registros={estado.registros} consultas={consultasFuturas} marcar={marcar} abrirMedicamento={() => setMedicamentoAberto('novo')} desfazerDisponivel={Boolean(desfazerPendente)} desfazer={desfazer} />}
       {aba === 'medicamentos' && <Medicamentos medicamentos={estado.medicamentos} abrirDetalhe={setMedicamentoAberto} abrirNovo={() => setMedicamentoAberto('novo')} />}
       {aba === 'historico' && <Historico registros={estado.registros} />}

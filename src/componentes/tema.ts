@@ -38,6 +38,13 @@ export const estilos = StyleSheet.create({
   acaoSecundaria: { color: cores.verde, fontSize: 15, fontWeight: '600' },
   divisor: { borderBottomWidth: 1, borderBottomColor: cores.borda },
 
+  navegacao: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: cores.branco, borderTopWidth: 1, borderTopColor: cores.borda, flexDirection: 'row', paddingHorizontal: espacamentos.xs },
+  itemNavegacao: { flex: 1, alignItems: 'center', minHeight: tamanhos.navegacaoBase, justifyContent: 'center', paddingHorizontal: espacamentos.xxs, paddingTop: espacamentos.xs, paddingBottom: espacamentos.xs },
+  rotuloNavegacao: { flexShrink: 1, color: cores.mutado, fontSize: 13, lineHeight: 17, fontWeight: '400', marginTop: 3, textAlign: 'center' },
+  rotuloNavegacaoSelecionado: { color: cores.verde, fontWeight: '700' },
+  indicadorNavegacao: { width: 22, height: 2, borderRadius: 1, marginTop: 3, backgroundColor: 'transparent' },
+  indicadorNavegacaoSelecionado: { backgroundColor: cores.verde },
+
   botao: { minHeight: tamanhos.toqueMinimo, borderRadius: raios.grande, paddingHorizontal: 17, alignItems: 'center', justifyContent: 'center', marginTop: espacamentos.sm },
   botaoPrimario: { backgroundColor: cores.verde },
   botaoSuave: { backgroundColor: cores.verdeClaro },

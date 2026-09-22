@@ -1,5 +1,6 @@
 import { fireEvent, render } from '@testing-library/react-native';
 import { Text } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Medicamento } from './dominio/agenda';
 import { Botao } from './componentes/Botao';
 import { CaixaModal } from './componentes/CaixaModal';
@@ -75,7 +76,13 @@ describe('acessibilidade dos fluxos críticos', () => {
   });
 
   it('expõe a aba ativa pelo estado de acessibilidade', async () => {
-    const tela = await render(<Navegacao aba="medicamentos" onChange={jest.fn()} />);
+    const tela = await render(
+      <SafeAreaProvider initialMetrics={{ frame: { x: 0, y: 0, width: 390, height: 844 }, insets: { top: 47, left: 0, right: 0, bottom: 34 } }}>
+        <Navegacao aba="medicamentos" onChange={jest.fn()} />
+      </SafeAreaProvider>,
+    );
+
+    expect(tela.getByTestId('navegacao-inferior')).toHaveStyle({ paddingBottom: 34 });
     expect(tela.getByRole('tab', { name: 'Remédios' }).props.accessibilityState).toEqual({ selected: true });
     expect(tela.getByRole('tab', { name: 'Hoje' }).props.accessibilityState).toEqual({ selected: false });
   });
