@@ -30,7 +30,7 @@ import {
   sincronizarNotificacoesComFuso,
 } from './src/notificacoes';
 import * as Notifications from 'expo-notifications';
-import { salvarCuidadorComConsentimento, revogarCuidador } from './src/cuidador';
+import { definirModoCuidador, salvarCuidadorComConsentimento, revogarCuidador } from './src/cuidador';
 import { Historico } from './src/telas/Historico';
 import { Inicio } from './src/telas/Inicio';
 import { DetalheMedicamento } from './src/telas/DetalheMedicamento';
@@ -90,6 +90,10 @@ export default function App() {
 
   const alternarDetalhesNotificacao = async () => {
     await persistir({ ...estado, mostrarDetalhesNotificacao: !estado.mostrarDetalhesNotificacao });
+  };
+
+  const alterarModoCuidador = async (modo: 'semCuidador' | 'comCuidador', confirmacaoRevogacao: boolean) => {
+    await persistir(definirModoCuidador(estado, modo, confirmacaoRevogacao));
   };
 
   useEffect(() => {
@@ -270,10 +274,9 @@ export default function App() {
     await persistir({ ...estado, consultas: estado.consultas.map((consulta) => consulta.id === id ? { ...consulta, concluida: true } : consulta) });
   };
 
-  const excluirConsulta = (id: string) => Alert.alert('Remover compromisso?', 'Os lembretes desse compromisso serão cancelados.', [
-    { text: 'Cancelar', style: 'cancel' },
-    { text: 'Remover', style: 'destructive', onPress: async () => persistir({ ...estado, consultas: estado.consultas.filter((consulta) => consulta.id !== id) }) },
-  ]);
+  const excluirConsulta = async (id: string) => {
+    await persistir({ ...estado, consultas: estado.consultas.filter((consulta) => consulta.id !== id) });
+  };
 
   const salvarCuidador = async () => {
     if (!cuidadorNome.trim() || !cuidadorContato.trim()) {
@@ -306,7 +309,7 @@ export default function App() {
       {aba === 'inicio' && <Inicio ocorrencias={ocorrencias} registros={estado.registros} consultas={consultasFuturas} marcar={marcar} abrirMedicamento={() => setMedicamentoAberto('novo')} desfazerDisponivel={Boolean(desfazerPendente)} desfazer={desfazer} />}
       {aba === 'medicamentos' && <Medicamentos medicamentos={estado.medicamentos} abrirDetalhe={setMedicamentoAberto} abrirNovo={() => setMedicamentoAberto('novo')} />}
       {aba === 'historico' && <Historico registros={estado.registros} />}
-      {aba === 'mais' && <MaisTela consultas={consultasFuturas} cuidador={estado.cuidador} abrirConsulta={() => setModal('consulta')} abrirCuidador={() => setModal('cuidador')} concluirConsulta={concluirConsulta} excluirConsulta={excluirConsulta} mostrarDetalhesNotificacao={estado.mostrarDetalhesNotificacao} alternarDetalhesNotificacao={alternarDetalhesNotificacao} />}
+      {aba === 'mais' && <MaisTela consultas={consultasFuturas} cuidador={estado.cuidador} modoCuidador={estado.modoCuidador === 'comCuidador' ? 'comCuidador' : 'semCuidador'} alterarModoCuidador={alterarModoCuidador} abrirConsulta={() => setModal('consulta')} abrirCuidador={() => setModal('cuidador')} concluirConsulta={concluirConsulta} excluirConsulta={excluirConsulta} mostrarDetalhesNotificacao={estado.mostrarDetalhesNotificacao} alternarDetalhesNotificacao={alternarDetalhesNotificacao} />}
     </ScrollView>
     <Navegacao aba={aba} onChange={setAba} />
     <ModalConsulta visivel={modal === 'consulta'} fechar={() => setModal(null)} titulo={consultaTitulo} setTitulo={setConsultaTitulo} data={consultaData} setData={setConsultaData} tipo={consultaTipo} setTipo={setConsultaTipo} local={consultaLocal} setLocal={setConsultaLocal} observacao={consultaObservacao} setObservacao={setConsultaObservacao} salvar={cadastrarConsulta} />

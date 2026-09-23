@@ -89,8 +89,8 @@ describe('acessibilidade dos fluxos críticos', () => {
   });
 
   it('expõe a preferência de privacidade da notificação', async () => {
-    const tela = await render(<Mais consultas={[]} abrirConsulta={jest.fn()} abrirCuidador={jest.fn()} mostrarDetalhesNotificacao={false} alternarDetalhesNotificacao={jest.fn()} />);
-    expect(tela.getByRole('button', { name: 'Mostrar detalhes nas notificações' }).props.accessibilityState).toEqual(expect.objectContaining({ disabled: false, selected: false }));
+    const tela = await render(<Mais consultas={[]} modoCuidador="semCuidador" alterarModoCuidador={jest.fn()} abrirConsulta={jest.fn()} abrirCuidador={jest.fn()} mostrarDetalhesNotificacao={false} alternarDetalhesNotificacao={jest.fn()} />);
+    expect(tela.getByRole('switch', { name: 'Mostrar detalhes nas notificações' }).props.accessibilityState).toEqual({ checked: false });
   });
 
   it('mantém ações da rotina acessíveis na lista inicial', async () => {

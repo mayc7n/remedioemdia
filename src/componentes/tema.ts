@@ -110,6 +110,8 @@ export const estilos = StyleSheet.create({
   nomeListaConcluido: { color: cores.mutado, textDecorationLine: 'line-through' },
   acoesLista: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
   compromisso: { flexDirection: 'row', alignItems: 'flex-start', gap: espacamentos.sm, paddingVertical: espacamentos.sm, borderBottomWidth: 1, borderBottomColor: cores.borda },
+  linhaConfiguracao: { flexDirection: 'row', alignItems: 'center', minHeight: tamanhos.toqueMinimo, gap: espacamentos.sm, paddingVertical: espacamentos.sm, borderBottomWidth: 1, borderBottomColor: cores.borda },
+  textoConfiguracao: { flex: 1, minWidth: 0 },
 
   rotinaItem: { paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: cores.borda },
   rotinaLinha: { flexDirection: 'row', alignItems: 'flex-start', gap: 14 },
