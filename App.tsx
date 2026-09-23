@@ -1,8 +1,9 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, AppState, Linking, Platform, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, AppState, Linking, Platform, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Botao } from './src/componentes/Botao';
+import type { ModoCuidadorEscolhido } from './src/componentes/EscolhaModoCuidador';
 import { Navegacao } from './src/componentes/Navegacao';
 import { cores, espacamentos, estilos } from './src/componentes/tema';
 import { carregarEstado, salvarEstado } from './src/dados/armazenamento';
@@ -32,6 +33,7 @@ import {
 import * as Notifications from 'expo-notifications';
 import { definirModoCuidador, salvarCuidadorComConsentimento, revogarCuidador } from './src/cuidador';
 import { Historico } from './src/telas/Historico';
+import { BoasVindas } from './src/telas/BoasVindas';
 import { Inicio } from './src/telas/Inicio';
 import { DetalheMedicamento } from './src/telas/DetalheMedicamento';
 import { Mais as MaisTela } from './src/telas/Mais';
@@ -94,6 +96,14 @@ export default function App() {
 
   const alterarModoCuidador = async (modo: 'semCuidador' | 'comCuidador', confirmacaoRevogacao: boolean) => {
     await persistir(definirModoCuidador(estado, modo, confirmacaoRevogacao));
+  };
+
+  const concluirBoasVindas = async (modo: ModoCuidadorEscolhido) => {
+    await persistir({ ...estado, concluiuBoasVindas: true, modoCuidador: modo });
+  };
+
+  const concluirEscolhaMigrada = async (modo: ModoCuidadorEscolhido) => {
+    await persistir(definirModoCuidador(estado, modo, false));
   };
 
   useEffect(() => {
@@ -299,7 +309,9 @@ export default function App() {
 
   if (carregando) return <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: cores.fundo }}><ActivityIndicator color={cores.verde} size="large" /></View>;
 
-  if (!estado.concluiuBoasVindas) return <SafeAreaView style={{ flex: 1, backgroundColor: cores.fundo }}><StatusBar style="dark" /><View style={{ flex: 1, justifyContent: 'center', padding: 26 }}><Text style={estilos.boasVindasMarca}>Remédio em Dia</Text><Text style={estilos.boasVindasTitulo}>Uma ajuda para lembrar, no seu ritmo.</Text><Text style={estilos.boasVindasTexto}>Organize medicamentos, consultas e exames. Seus dados ficam neste aparelho e o app continua funcionando sem Internet.</Text><View style={estilos.avisoClinico}><Text style={estilos.nome}>Um lembrete, não uma prescrição</Text><Text style={estilos.secundario}>Siga sempre a orientação do seu médico. O app não altera doses nem oferece diagnóstico.</Text></View><Botao texto="Entendi, começar" onPress={() => persistir({ ...estado, concluiuBoasVindas: true })} /></View></SafeAreaView>;
+  if (!estado.concluiuBoasVindas) return <BoasVindas onConcluir={concluirBoasVindas} />;
+
+  if (estado.modoCuidador === 'naoInformado') return <BoasVindas somenteModo onConcluir={concluirEscolhaMigrada} />;
 
   if (medicamentoSelecionado) return <SafeAreaView style={{ flex: 1, backgroundColor: cores.fundo }}><StatusBar style="dark" /><View style={{ flex: 1, padding: 22 }}><Botao texto="Voltar para medicamentos" variante="texto" onPress={() => setMedicamentoAberto(null)} /><DetalheMedicamento medicamento={medicamentoSelecionado} novo={medicamentoSelecionado.id === 'novo'} registros={estado.registros} onSalvar={salvarMedicamento} onPausar={mudarSituacao} onExcluir={excluirMedicamento} /></View></SafeAreaView>;
 

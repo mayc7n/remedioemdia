@@ -152,7 +152,11 @@ export const estilos = StyleSheet.create({
   estadoRegistroTextoCompacto: { fontSize: 13, lineHeight: 18 },
 
   boasVindasMarca: { color: cores.verde, fontWeight: '600', fontSize: 16, marginBottom: 32 },
+  boasVindasConteudo: { flexGrow: 1, justifyContent: 'center', paddingTop: espacamentos.xl, paddingBottom: espacamentos.xxl },
+  boasVindasAcao: { marginTop: espacamentos.xl },
   boasVindasTitulo: { color: cores.texto, fontSize: 30, lineHeight: 37, fontWeight: '700' },
-  boasVindasTexto: { color: cores.mutado, fontSize: 17, lineHeight: 25, marginTop: 14, marginBottom: 20 },
+  boasVindasTexto: { color: cores.mutado, ...tipografia.corpo, marginTop: espacamentos.sm },
+  escolhaModoLinha: { flexDirection: 'row', alignItems: 'center', minHeight: tamanhos.toqueMinimo, gap: espacamentos.md, paddingVertical: espacamentos.md, paddingHorizontal: espacamentos.sm, borderBottomWidth: 1, borderBottomColor: cores.borda },
+  escolhaModoSelecionada: { backgroundColor: cores.verdeClaro, borderRadius: raios.medio },
   avisoClinico: { backgroundColor: cores.verdeClaro, borderRadius: raios.grande, padding: espacamentos.md, marginVertical: espacamentos.md, borderLeftWidth: 3, borderLeftColor: cores.verde },
 });
