@@ -129,7 +129,9 @@ export const estilos = StyleSheet.create({
   horariosLista: { color: cores.mutado, fontSize: 14, marginTop: 3, fontVariant: ['tabular-nums'] },
   observacaoLista: { color: cores.mutado, fontSize: 14, lineHeight: 20, marginTop: 6 },
 
-  historicoItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: cores.borda, gap: 12 },
+  historicoGrupoTitulo: { color: cores.mutado, ...tipografia.secundario, fontWeight: '700', marginTop: espacamentos.lg, marginBottom: espacamentos.xxs },
+  historicoItem: { flexDirection: 'row', alignItems: 'flex-start', paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: cores.borda, gap: espacamentos.sm },
+  historicoHorario: { color: cores.texto, fontSize: 15, fontWeight: '600', fontVariant: ['tabular-nums'], paddingTop: 1 },
   historicoFiltros: { backgroundColor: cores.branco, borderRadius: raios.grande, padding: 14, marginBottom: espacamentos.md, borderWidth: 1, borderColor: cores.borda },
   historicoPeriodoLabel: { marginTop: 16 },
   historicoMarcador: { width: 9, height: 9, borderRadius: 5 },

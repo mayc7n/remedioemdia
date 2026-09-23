@@ -10,6 +10,8 @@ const apresentacaoPorEstado = {
   pendente: { icone: 'ellipse-outline', rotulo: 'Pendente', cor: cores.mutado },
 } satisfies Record<EstadoRegistro, { icone: keyof typeof Ionicons.glyphMap; rotulo: string; cor: string }>;
 
+export const rotuloEstadoRegistro = (estado: EstadoRegistro) => apresentacaoPorEstado[estado].rotulo;
+
 export function EstadoRegistroVisual({ estado, compacto = false }: { estado: EstadoRegistro; compacto?: boolean }) {
   const apresentacao = apresentacaoPorEstado[estado];
 
