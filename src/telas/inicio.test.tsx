@@ -22,7 +22,7 @@ function contraste(corA: string, corB: string) {
 
 describe('tela inicial', () => {
   it('mantém contraste de texto normal no destaque e na ação Esqueci', async () => {
-    const tela = await render(<Inicio ocorrencias={[ocorrencia]} registros={[]} consultas={[]} marcar={jest.fn()} abrirMedicamento={jest.fn()} desfazerDisponivel={false} desfazer={jest.fn()} />);
+    const tela = await render(<Inicio ocorrencias={[ocorrencia]} registros={[]} consultas={[]} marcar={jest.fn()} abrirMedicamento={jest.fn()} desfazer={jest.fn()} />);
     const legenda = tela.getByText('Próximo lembrete');
     const esqueci = tela.getByText('Esqueci');
     const corLegenda = StyleSheet.flatten(legenda.props.style).color as string;
@@ -40,7 +40,7 @@ describe('tela inicial', () => {
     ];
     const registros = [{ ...ocorrencias[0], estado: 'taken' as const, origem: 'app' as const, registradoEm: '2026-09-18T08:00:00.000Z' }];
     const marcar = jest.fn();
-    const tela = await render(<Inicio ocorrencias={ocorrencias} registros={registros} consultas={[]} marcar={marcar} abrirMedicamento={jest.fn()} desfazerDisponivel={false} desfazer={jest.fn()} />);
+    const tela = await render(<Inicio ocorrencias={ocorrencias} registros={registros} consultas={[]} marcar={marcar} abrirMedicamento={jest.fn()} desfazer={jest.fn()} />);
 
     expect(tela.getAllByTestId(/^ocorrencia-/).map((linha) => linha.props.testID)).toEqual(['ocorrencia-cedo', 'ocorrencia-meio', 'ocorrencia-tarde']);
     expect(within(tela.getByTestId('ocorrencia-meio')).getByRole('button', { name: 'Registrar como tomado' })).toBeTruthy();
@@ -50,7 +50,7 @@ describe('tela inicial', () => {
   });
 
   it('mantém o único lembrete pendente na lista com suas ações', async () => {
-    const tela = await render(<Inicio ocorrencias={[ocorrencia]} registros={[]} consultas={[]} marcar={jest.fn()} abrirMedicamento={jest.fn()} desfazerDisponivel={false} desfazer={jest.fn()} />);
+    const tela = await render(<Inicio ocorrencias={[ocorrencia]} registros={[]} consultas={[]} marcar={jest.fn()} abrirMedicamento={jest.fn()} desfazer={jest.fn()} />);
 
     expect(tela.getAllByTestId(/^ocorrencia-/)).toHaveLength(1);
     expect(within(tela.getByTestId(`ocorrencia-${ocorrencia.id}`)).getByRole('button', { name: 'Adiar lembrete' })).toBeTruthy();
@@ -59,7 +59,7 @@ describe('tela inicial', () => {
 
   it('mantém as ações concluídas visíveis e desabilitadas', async () => {
     const registro = { ...ocorrencia, estado: 'taken' as const, origem: 'app' as const, registradoEm: '2026-09-18T08:00:00.000Z' };
-    const tela = await render(<Inicio ocorrencias={[ocorrencia]} registros={[registro]} consultas={[]} marcar={jest.fn()} abrirMedicamento={jest.fn()} desfazerDisponivel={false} desfazer={jest.fn()} />);
+    const tela = await render(<Inicio ocorrencias={[ocorrencia]} registros={[registro]} consultas={[]} marcar={jest.fn()} abrirMedicamento={jest.fn()} desfazer={jest.fn()} />);
     const linha = within(tela.getByTestId(`ocorrencia-${ocorrencia.id}`));
 
     for (const nome of ['Registrar como tomado', 'Adiar lembrete', 'Registrar como esquecido']) {
@@ -69,15 +69,40 @@ describe('tela inicial', () => {
 
   it('oferece desfazer para a última marcação', async () => {
     const desfazer = jest.fn();
-    const tela = await render(<Inicio ocorrencias={[ocorrencia]} registros={[]} consultas={[]} marcar={jest.fn()} abrirMedicamento={jest.fn()} desfazerDisponivel desfazer={desfazer} />);
+    const registro = { ...ocorrencia, estado: 'taken' as const, origem: 'app' as const, registradoEm: '2026-09-18T08:00:00.000Z' };
+    const tela = await render(<Inicio ocorrencias={[ocorrencia]} registros={[registro]} consultas={[]} marcar={jest.fn()} abrirMedicamento={jest.fn()} desfazerOcorrenciaId={ocorrencia.id} desfazer={desfazer} />);
 
     await fireEvent.press(tela.getByRole('button', { name: 'Desfazer marcação' }));
 
     expect(desfazer).toHaveBeenCalledTimes(1);
   });
 
+  it('mostra Desfazer junto à última dose registrada no fim da lista', async () => {
+    const doseFinal = { ...ocorrencia, id: 'dose-final', horario: '22:00', previstoPara: '2026-09-18T22:00:00' };
+    const registroFinal = { ...doseFinal, estado: 'taken' as const, origem: 'app' as const, registradoEm: '2026-09-18T22:00:00.000Z' };
+    const desfazer = jest.fn();
+    const tela = await render(<Inicio ocorrencias={[ocorrencia, doseFinal]} registros={[registroFinal]} consultas={[]} marcar={jest.fn()} abrirMedicamento={jest.fn()} desfazerOcorrenciaId="dose-final" desfazer={desfazer} />);
+
+    const linhaInicial = within(tela.getByTestId(`ocorrencia-${ocorrencia.id}`));
+    const linhaFinal = within(tela.getByTestId('ocorrencia-dose-final'));
+    expect(linhaInicial.queryByRole('button', { name: 'Desfazer marcação' })).toBeNull();
+    expect(linhaFinal.getByRole('button', { name: 'Desfazer marcação' })).toBeTruthy();
+    expect(tela.getAllByRole('button', { name: 'Desfazer marcação' })).toHaveLength(1);
+    await fireEvent.press(linhaFinal.getByRole('button', { name: 'Desfazer marcação' }));
+    expect(desfazer).toHaveBeenCalledTimes(1);
+  });
+
+  it('mantém Desfazer acessível para uma ação do widget fora da lista de hoje', async () => {
+    const desfazer = jest.fn();
+    const tela = await render(<Inicio ocorrencias={[ocorrencia]} registros={[]} consultas={[]} marcar={jest.fn()} abrirMedicamento={jest.fn()} desfazerOcorrenciaId="dose-de-outro-dia" desfazer={desfazer} />);
+
+    expect(tela.getByRole('button', { name: 'Desfazer marcação' })).toBeTruthy();
+    await fireEvent.press(tela.getByRole('button', { name: 'Desfazer marcação' }));
+    expect(desfazer).toHaveBeenCalledTimes(1);
+  });
+
   it('apresenta uma lista simples sem hero ou métricas decorativas', async () => {
-    const tela = await render(<Inicio ocorrencias={[ocorrencia]} registros={[]} consultas={[]} marcar={jest.fn()} abrirMedicamento={jest.fn()} desfazerDisponivel={false} desfazer={jest.fn()} dataAtual={new Date(2026, 8, 18, 9)} />);
+    const tela = await render(<Inicio ocorrencias={[ocorrencia]} registros={[]} consultas={[]} marcar={jest.fn()} abrirMedicamento={jest.fn()} desfazer={jest.fn()} dataAtual={new Date(2026, 8, 18, 9)} />);
 
     expect(tela.getByText('sexta-feira, 18 de setembro')).toBeTruthy();
     expect(tela.getByText('Próximo lembrete')).toBeTruthy();
@@ -102,7 +127,7 @@ describe('tela inicial', () => {
       { ...ocorrencias[1], estado: 'snoozed' as const, origem: 'app' as const, registradoEm: '2026-09-18T12:00:00.000Z' },
       { ...ocorrencias[2], estado: 'missed' as const, origem: 'app' as const, registradoEm: '2026-09-18T20:00:00.000Z' },
     ];
-    const tela = await render(<Inicio ocorrencias={ocorrencias} registros={registros} consultas={[]} marcar={jest.fn()} abrirMedicamento={jest.fn()} desfazerDisponivel={false} desfazer={jest.fn()} />);
+    const tela = await render(<Inicio ocorrencias={ocorrencias} registros={registros} consultas={[]} marcar={jest.fn()} abrirMedicamento={jest.fn()} desfazer={jest.fn()} />);
 
     expect(tela.getByTestId('estado-taken')).toBeTruthy();
     expect(tela.getByTestId('estado-snoozed')).toBeTruthy();
@@ -119,7 +144,7 @@ describe('tela inicial', () => {
       expect(marcar).not.toHaveBeenCalled();
       botoes?.find((botao) => botao.text === 'Esqueci')?.onPress?.();
     });
-    const tela = await render(<Inicio ocorrencias={[ocorrencia]} registros={[]} consultas={[]} marcar={marcar} abrirMedicamento={jest.fn()} desfazerDisponivel={false} desfazer={jest.fn()} />);
+    const tela = await render(<Inicio ocorrencias={[ocorrencia]} registros={[]} consultas={[]} marcar={marcar} abrirMedicamento={jest.fn()} desfazer={jest.fn()} />);
 
     await fireEvent.press(tela.getByRole('button', { name: 'Registrar como esquecido' }));
 

@@ -306,7 +306,7 @@ export default function App() {
   return <SafeAreaView edges={['top', 'left', 'right']} style={estilos.tela}>
     <StatusBar style="dark" />
     <ScrollView style={estilos.flexivel} contentContainerStyle={[estilos.conteudo, { paddingTop: espacamentos.lg, paddingBottom: espacamentos.lg }]}>
-      {aba === 'inicio' && <Inicio ocorrencias={ocorrencias} registros={estado.registros} consultas={consultasFuturas} marcar={marcar} abrirMedicamento={() => setMedicamentoAberto('novo')} desfazerDisponivel={Boolean(desfazerPendente)} desfazer={desfazer} />}
+      {aba === 'inicio' && <Inicio ocorrencias={ocorrencias} registros={estado.registros} consultas={consultasFuturas} marcar={marcar} abrirMedicamento={() => setMedicamentoAberto('novo')} desfazerOcorrenciaId={desfazerPendente?.ocorrenciaId} desfazer={desfazer} />}
       {aba === 'medicamentos' && <Medicamentos medicamentos={estado.medicamentos} abrirDetalhe={setMedicamentoAberto} abrirNovo={() => setMedicamentoAberto('novo')} />}
       {aba === 'historico' && <Historico registros={estado.registros} />}
       {aba === 'mais' && <MaisTela consultas={consultasFuturas} cuidador={estado.cuidador} modoCuidador={estado.modoCuidador === 'comCuidador' ? 'comCuidador' : 'semCuidador'} alterarModoCuidador={alterarModoCuidador} abrirConsulta={() => setModal('consulta')} abrirCuidador={() => setModal('cuidador')} concluirConsulta={concluirConsulta} excluirConsulta={excluirConsulta} mostrarDetalhesNotificacao={estado.mostrarDetalhesNotificacao} alternarDetalhesNotificacao={alternarDetalhesNotificacao} />}

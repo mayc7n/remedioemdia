@@ -12,12 +12,12 @@ type Props = {
   consultas: Consulta[];
   marcar: (item: ReturnType<typeof ocorrenciasDoDia>[number], acao: 'taken' | 'snoozed' | 'missed') => void;
   abrirMedicamento: () => void;
-  desfazerDisponivel: boolean;
+  desfazerOcorrenciaId?: string;
   desfazer: () => void;
   dataAtual?: Date;
 };
 
-export function Inicio({ ocorrencias, registros, consultas, marcar, abrirMedicamento, desfazerDisponivel, desfazer, dataAtual }: Props) {
+export function Inicio({ ocorrencias, registros, consultas, marcar, abrirMedicamento, desfazerOcorrenciaId, desfazer, dataAtual }: Props) {
   const pendentes = ocorrencias.filter((item) => !registros.some((registro) => registro.id === item.id && registro.estado !== 'pendente'));
   const proximo = pendentes[0];
   const dataFormatada = (dataAtual ?? new Date()).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -36,11 +36,13 @@ export function Inicio({ ocorrencias, registros, consultas, marcar, abrirMedicam
     <Botao texto="Adiar" variante="suave" onPress={() => marcarAcao(item, 'snoozed')} accessibilityLabel="Adiar lembrete" desativado={finalizado} />
     <Botao texto="Esqueci" variante="texto" onPress={() => marcarAcao(item, 'missed')} accessibilityLabel="Registrar como esquecido" desativado={finalizado} />
   </View>;
+  const avisoDesfazer = <View style={estilos.avisoDesfazer}><Text allowFontScaling style={estilos.secundario}>Ação registrada. Você pode desfazer por alguns segundos.</Text><Botao texto="Desfazer" variante="texto" onPress={desfazer} accessibilityLabel="Desfazer marcação" accessibilityHint="Reverte a última marcação do histórico" /></View>;
+  const desfazerNaLista = ocorrencias.some((item) => item.id === desfazerOcorrenciaId && registros.some((registro) => registro.id === item.id && registro.estado !== 'pendente'));
 
   return <View>
     <Text allowFontScaling style={estilos.titulo}>Hoje</Text>
     <Text allowFontScaling style={estilos.dataHoje}>{dataFormatada}</Text>
-    {desfazerDisponivel && <View style={estilos.avisoDesfazer}><Text allowFontScaling style={estilos.secundario}>Ação registrada. Você pode desfazer por alguns segundos.</Text><Botao texto="Desfazer" variante="texto" onPress={desfazer} accessibilityLabel="Desfazer marcação" accessibilityHint="Reverte a última marcação do histórico" /></View>}
+    {desfazerOcorrenciaId && !desfazerNaLista && avisoDesfazer}
     {ocorrencias.length === 0 ? <>
       <View style={estilos.vazio}>
         <Text allowFontScaling style={estilos.nome}>Nenhum lembrete para hoje</Text>
@@ -70,6 +72,7 @@ export function Inicio({ ocorrencias, registros, consultas, marcar, abrirMedicam
         return <View key={item.id} testID={`ocorrencia-${item.id}`} style={estilos.rotinaItem}>
           <View style={estilos.rotinaLinha}><Text allowFontScaling style={estilos.horarioLista}>{item.horario}</Text><View style={estilos.rotinaConteudo}><Text allowFontScaling style={estilos.nome}>{item.medicamentoNome}</Text><EstadoRegistroVisual estado={estado} compacto /></View></View>
           {acoesDoRegistro(item, finalizado)}
+          {finalizado && desfazerOcorrenciaId === item.id && avisoDesfazer}
         </View>;
       })}
     </>}
