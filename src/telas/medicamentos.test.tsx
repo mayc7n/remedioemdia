@@ -1,4 +1,5 @@
 import { Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { fireEvent, render } from '@testing-library/react-native';
 import { Medicamento, RegistroMedicamento } from '../dominio/agenda';
 import { DetalheMedicamento } from './DetalheMedicamento';
@@ -42,6 +43,53 @@ const registro: RegistroMedicamento = {
 };
 
 describe('fluxo de medicamentos', () => {
+  it('lista ativos antes de pausados, identifica situação por ícone e texto e oculta excluídos', async () => {
+    const pausado = { ...medicamento, id: 'm2', nome: 'Remédio pausado', situacao: 'pausado' as const };
+    const excluido = { ...medicamento, id: 'm3', nome: 'Medicamento excluído', situacao: 'excluido' as const };
+    const tela = await render(<Medicamentos medicamentos={[pausado, excluido, medicamento]} abrirDetalhe={jest.fn()} abrirNovo={jest.fn()} />);
+
+    expect(tela.getAllByRole('button', { name: /Abrir medicamento/ }).map((linha) => linha.props.accessibilityLabel)).toEqual([
+      'Abrir medicamento Remédio da manhã, Ativo. Horários 08:00. Frequência todos os dias. Tomar conforme orientação médica.',
+      'Abrir medicamento Remédio pausado, Pausado. Horários 08:00. Frequência todos os dias. Tomar conforme orientação médica.',
+    ]);
+    expect(tela.getByTestId('medicamento-ativo')).toBeTruthy();
+    expect(tela.getByTestId('medicamento-pausado')).toBeTruthy();
+    expect(tela.getByText('Ativo')).toBeTruthy();
+    expect(tela.getByText('Pausado')).toBeTruthy();
+    expect(tela.getAllByText(String.fromCodePoint(Number(Ionicons.glyphMap['chevron-forward'])))).toHaveLength(2);
+    expect(tela.queryByText('›')).toBeNull();
+    expect(tela.queryByText('Medicamento excluído')).toBeNull();
+  });
+
+  it('traduz o estado dos registros recentes no detalhe', async () => {
+    const tela = await render(<DetalheMedicamento medicamento={medicamento} registros={[registro]} onSalvar={jest.fn()} onPausar={jest.fn()} onExcluir={jest.fn()} />);
+
+    expect(tela.getByText('Frequência')).toBeTruthy();
+    expect(tela.getByRole('button', { name: 'Frequência todos os dias' }).props.accessibilityState).toEqual(expect.objectContaining({ selected: true }));
+    expect(tela.getByRole('button', { name: 'Usar apenas alguns dias' }).props.accessibilityState).toEqual(expect.objectContaining({ selected: false }));
+    expect(tela.getByText('Registros recentes')).toBeTruthy();
+    expect(tela.getByText('Tomado')).toBeTruthy();
+    expect(tela.queryByText('taken')).toBeNull();
+  });
+
+  it('mostra os cinco registros mais recentes com data e hora distintas', async () => {
+    const registros = [13, 14, 15, 16, 17, 18].map((dia) => ({
+      ...registro,
+      id: `m1-2026-09-${dia}-08:00`,
+      previstoPara: `2026-09-${dia}T08:00:00`,
+    }));
+    const tela = await render(<DetalheMedicamento medicamento={medicamento} registros={registros} onSalvar={jest.fn()} onPausar={jest.fn()} onExcluir={jest.fn()} />);
+
+    expect(tela.getAllByText(/\/09\/2026 às 08:00/).map((texto) => texto.props.children)).toEqual([
+      '18/09/2026 às 08:00',
+      '17/09/2026 às 08:00',
+      '16/09/2026 às 08:00',
+      '15/09/2026 às 08:00',
+      '14/09/2026 às 08:00',
+    ]);
+    expect(tela.queryByText('13/09/2026 às 08:00')).toBeNull();
+  });
+
   it('oferece um seletor nativo para cada horário', async () => {
     const tela = await render(
       <DetalheMedicamento
@@ -60,7 +108,7 @@ describe('fluxo de medicamentos', () => {
     const abrirDetalhe = jest.fn();
     const tela = await render(<Medicamentos medicamentos={[medicamento]} abrirDetalhe={abrirDetalhe} abrirNovo={jest.fn()} />);
 
-    await fireEvent.press(tela.getByRole('button', { name: 'Abrir medicamento Remédio da manhã' }));
+    await fireEvent.press(tela.getByRole('button', { name: 'Abrir medicamento Remédio da manhã, Ativo. Horários 08:00. Frequência todos os dias. Tomar conforme orientação médica.' }));
 
     expect(abrirDetalhe).toHaveBeenCalledWith('m1');
   });

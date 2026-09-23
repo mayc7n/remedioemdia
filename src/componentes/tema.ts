@@ -61,6 +61,7 @@ export const estilos = StyleSheet.create({
   input: { minHeight: 52, borderWidth: 1, borderColor: cores.borda, borderRadius: raios.grande, backgroundColor: cores.branco, paddingHorizontal: 14, color: cores.texto, fontSize: tipografia.secao.fontSize },
   erro: { color: cores.vermelho, ...tipografia.secundario, marginTop: espacamentos.xs },
   escolhas: { flexDirection: 'row', flexWrap: 'wrap', gap: espacamentos.xs },
+  frequenciaOpcoes: { alignItems: 'stretch', marginBottom: espacamentos.sm },
   selecionado: { borderWidth: 2, borderColor: cores.verde },
 
   horarioLinha: { flexDirection: 'row', alignItems: 'center', gap: espacamentos.sm, marginBottom: espacamentos.sm },
@@ -118,7 +119,11 @@ export const estilos = StyleSheet.create({
   listaCabecalho: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 2, marginBottom: 6 },
   cabecalhoResumo: { color: cores.mutado, fontSize: 14, fontWeight: '600', paddingBottom: 12 },
 
-  medicamentoItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: cores.borda, gap: 12 },
+  medicamentoItem: { flexDirection: 'row', alignItems: 'center', minHeight: tamanhos.toqueMinimo, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: cores.borda, gap: 12 },
+  medicamentoSituacao: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: espacamentos.xxs, marginTop: espacamentos.xs },
+  medicamentoSituacaoTexto: { ...tipografia.secundario, fontWeight: '600' },
+  registrosRecentes: { marginTop: espacamentos.xl },
+  registroRecente: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: espacamentos.xs, paddingVertical: espacamentos.sm, borderBottomWidth: 1, borderBottomColor: cores.borda },
   statusMarcador: { width: 4, alignSelf: 'stretch', borderRadius: 2, backgroundColor: cores.verde },
   statusMarcadorPausado: { backgroundColor: cores.ambar },
   horariosLista: { color: cores.mutado, fontSize: 14, marginTop: 3, fontVariant: ['tabular-nums'] },

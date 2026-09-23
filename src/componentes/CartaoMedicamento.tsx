@@ -1,6 +1,7 @@
 import { Pressable, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Medicamento } from '../dominio/agenda';
-import { estilos } from './tema';
+import { cores, estilos } from './tema';
 
 export function CartaoMedicamento({ medicamento, abrir }: { medicamento: Medicamento; abrir: () => void }) {
   const frequencia = medicamento.frequencia.tipo === 'diaria'
@@ -8,15 +9,20 @@ export function CartaoMedicamento({ medicamento, abrir }: { medicamento: Medicam
     : medicamento.frequencia.tipo === 'diasDaSemana'
       ? 'dias selecionados'
       : `a cada ${medicamento.frequencia.aCadaDias} dias`;
-  const situacao = medicamento.situacao === 'ativo' ? 'Ativo' : medicamento.situacao === 'pausado' ? 'Pausado' : 'Excluído';
+  const ativo = medicamento.situacao === 'ativo';
+  const situacao = ativo ? 'Ativo' : medicamento.situacao === 'pausado' ? 'Pausado' : 'Excluído';
+  const resumoAcessivel = `Abrir medicamento ${medicamento.nome}, ${situacao}. Horários ${medicamento.horarios.join(', ')}. Frequência ${frequencia}.${medicamento.observacao ? ` ${medicamento.observacao}` : ''}`;
 
-  return <Pressable accessibilityRole="button" accessibilityLabel={`Abrir medicamento ${medicamento.nome}`} accessibilityHint="Abre os detalhes e os horários" onPress={abrir} style={({ pressed }) => [estilos.medicamentoItem, pressed && estilos.pressionado]}>
-    <View style={[estilos.statusMarcador, medicamento.situacao !== 'ativo' && estilos.statusMarcadorPausado]} />
+  return <Pressable accessibilityRole="button" accessibilityLabel={resumoAcessivel} accessibilityHint="Abre os detalhes e os horários" onPress={abrir} style={({ pressed }) => [estilos.medicamentoItem, pressed && estilos.pressionado]}>
     <View style={estilos.flexivel}>
-      <View style={estilos.linhaEntre}><Text style={estilos.nome}>{medicamento.nome}</Text><Text style={estilos.seta}>›</Text></View>
-      <Text style={estilos.horariosLista}>{medicamento.horarios.join('  ·  ')}</Text>
-      <Text style={estilos.secundario}>{frequencia} · {situacao}</Text>
-      {medicamento.observacao && <Text style={estilos.observacaoLista}>{medicamento.observacao}</Text>}
+      <Text allowFontScaling style={estilos.nome}>{medicamento.nome}</Text>
+      <Text allowFontScaling style={estilos.horariosLista}>{medicamento.horarios.join('  ·  ')} · {frequencia}</Text>
+      <View testID={`medicamento-${medicamento.situacao}`} style={estilos.medicamentoSituacao}>
+        <Ionicons name={ativo ? 'checkmark-circle-outline' : 'pause-circle-outline'} size={16} color={ativo ? cores.verde : cores.ambar} accessible={false} />
+        <Text allowFontScaling style={[estilos.medicamentoSituacaoTexto, { color: ativo ? cores.verde : cores.ambar }]}>{situacao}</Text>
+      </View>
+      {medicamento.observacao && <Text allowFontScaling style={estilos.observacaoLista}>{medicamento.observacao}</Text>}
     </View>
+    <Ionicons name="chevron-forward" size={20} color={cores.mutado} accessible={false} />
   </Pressable>;
 }

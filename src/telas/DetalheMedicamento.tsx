@@ -5,7 +5,9 @@ import { Botao } from '../componentes/Botao';
 import { Campo, Rotulo } from '../componentes/Campo';
 import { SeletorFrequencia } from '../componentes/SeletorFrequencia';
 import { HorarioPicker } from '../componentes/HorarioPicker';
-import { cores, estilos } from '../componentes/tema';
+import { EstadoRegistroVisual } from '../componentes/EstadoRegistro';
+import { formatarDataHoraBrasileira } from '../componentes/DataHoraPicker';
+import { estilos } from '../componentes/tema';
 
 type Props = {
   medicamento: Medicamento;
@@ -23,7 +25,8 @@ export function DetalheMedicamento({ medicamento, registros, onSalvar, onPausar,
   const [observacao, setObservacao] = useState(medicamento.observacao ?? '');
   const [horarios, setHorarios] = useState(medicamento.horarios);
   const [frequencia, setFrequencia] = useState(medicamento.frequencia);
-  const registrosRecentes = useMemo(() => registros.filter((registro) => registro.medicamentoId === medicamento.id).slice(0, 5), [medicamento.id, registros]);
+  const registrosRecentes = useMemo(() => registros.filter((registro) => registro.medicamentoId === medicamento.id)
+    .sort((a, b) => b.previstoPara.localeCompare(a.previstoPara)).slice(0, 5), [medicamento.id, registros]);
 
   const salvar = () => {
     const horariosLimpos = Array.from(new Set(horarios.map((horario) => horario.trim()).filter(horarioValido))).sort();
@@ -49,16 +52,18 @@ export function DetalheMedicamento({ medicamento, registros, onSalvar, onPausar,
   return <ScrollView>
     <Text style={estilos.titulo}>{novo ? 'Novo medicamento' : 'Detalhe do medicamento'}</Text>
     <Text style={estilos.ajuda}>A observação deve repetir apenas o que foi fornecido pelo seu médico. O app não altera doses.</Text>
+    <Text allowFontScaling style={estilos.secaoTitulo}>Identificação</Text>
     <Campo label="Nome do medicamento" value={nome} onChangeText={setNome} placeholder="Ex.: Remédio da manhã" />
     <Rotulo>Horários</Rotulo>
     <Text style={estilos.ajudaCampo}>Escolha horários exatos. O app salva e agenda sempre no formato de 24 horas.</Text>
     {horarios.map((horario, indice) => <HorarioPicker key={`${indice}-${horario}`} indice={indice} valor={horario} onChange={(valor) => setHorarios((atuais) => atuais.map((atual, atualIndice) => atualIndice === indice ? valor : atual))} remover={horarios.length > 1 ? () => setHorarios((atuais) => atuais.filter((_, atualIndice) => atualIndice !== indice)) : undefined} />)}
     <Botao texto="Adicionar horário" variante="suave" onPress={() => setHorarios((atuais) => [...atuais, '20:00'])} />
     <SeletorFrequencia value={frequencia} onChange={setFrequencia} />
+    <Text allowFontScaling style={estilos.secaoTitulo}>Observações</Text>
     <Campo label="Observação do médico (opcional)" value={observacao} onChangeText={setObservacao} placeholder="Ex.: conforme orientação recebida" multiline />
     <Botao texto="Salvar medicamento" onPress={salvar} />
     {!novo && <><Botao texto={medicamento.situacao === 'pausado' ? 'Retomar lembretes' : 'Pausar lembretes'} variante="suave" onPress={() => onPausar(medicamento.situacao === 'pausado' ? 'ativo' : 'pausado')} accessibilityLabel={medicamento.situacao === 'pausado' ? 'Retomar lembretes' : 'Pausar lembretes'} />
       <Botao texto="Excluir medicamento" variante="perigo" onPress={excluir} />
-      <View style={{ marginTop: 22, padding: 16, borderRadius: 16, backgroundColor: cores.branco, borderWidth: 1, borderColor: cores.borda }}><Text style={estilos.nome}>Histórico recente</Text>{registrosRecentes.length === 0 ? <Text style={estilos.secundario}>Ainda não há registros.</Text> : registrosRecentes.map((registro) => <Text key={registro.id} style={estilos.secundario}>{registro.horario} · {registro.estado}</Text>)}</View></>}
+      <View style={estilos.registrosRecentes}><Text allowFontScaling style={estilos.secaoTitulo}>Registros recentes</Text>{registrosRecentes.length === 0 ? <Text allowFontScaling style={estilos.secundario}>Ainda não há registros.</Text> : registrosRecentes.map((registro) => <View key={registro.id} style={estilos.registroRecente}><Text allowFontScaling style={estilos.secundario}>{formatarDataHoraBrasileira(registro.previstoPara.slice(0, 16))}</Text><EstadoRegistroVisual estado={registro.estado} compacto /></View>)}</View></>}
   </ScrollView>;
 }
