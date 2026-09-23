@@ -49,21 +49,23 @@ export function DetalheMedicamento({ medicamento, registros, onSalvar, onPausar,
     { text: 'Excluir', style: 'destructive', onPress: onExcluir },
   ]);
 
-  return <ScrollView>
-    <Text style={estilos.titulo}>{novo ? 'Novo medicamento' : 'Detalhe do medicamento'}</Text>
-    <Text style={estilos.ajuda}>A observação deve repetir apenas o que foi fornecido pelo seu médico. O app não altera doses.</Text>
+  return <ScrollView keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets contentContainerStyle={estilos.formularioConteudo}>
+    <Text allowFontScaling style={estilos.titulo}>{novo ? 'Novo medicamento' : 'Detalhe do medicamento'}</Text>
+    <Text allowFontScaling style={estilos.ajuda}>A observação deve repetir apenas o que foi fornecido pelo seu médico. O app não altera doses.</Text>
     <Text allowFontScaling style={estilos.secaoTitulo}>Identificação</Text>
     <Campo label="Nome do medicamento" value={nome} onChangeText={setNome} placeholder="Ex.: Remédio da manhã" />
     <Rotulo>Horários</Rotulo>
-    <Text style={estilos.ajudaCampo}>Escolha horários exatos. O app salva e agenda sempre no formato de 24 horas.</Text>
+    <Text allowFontScaling style={estilos.ajudaCampo}>Escolha horários exatos. O app salva e agenda sempre no formato de 24 horas.</Text>
     {horarios.map((horario, indice) => <HorarioPicker key={`${indice}-${horario}`} indice={indice} valor={horario} onChange={(valor) => setHorarios((atuais) => atuais.map((atual, atualIndice) => atualIndice === indice ? valor : atual))} remover={horarios.length > 1 ? () => setHorarios((atuais) => atuais.filter((_, atualIndice) => atualIndice !== indice)) : undefined} />)}
     <Botao texto="Adicionar horário" variante="suave" onPress={() => setHorarios((atuais) => [...atuais, '20:00'])} />
     <SeletorFrequencia value={frequencia} onChange={setFrequencia} />
     <Text allowFontScaling style={estilos.secaoTitulo}>Observações</Text>
     <Campo label="Observação do médico (opcional)" value={observacao} onChangeText={setObservacao} placeholder="Ex.: conforme orientação recebida" multiline />
-    <Botao texto="Salvar medicamento" onPress={salvar} />
-    {!novo && <><Botao texto={medicamento.situacao === 'pausado' ? 'Retomar lembretes' : 'Pausar lembretes'} variante="suave" onPress={() => onPausar(medicamento.situacao === 'pausado' ? 'ativo' : 'pausado')} accessibilityLabel={medicamento.situacao === 'pausado' ? 'Retomar lembretes' : 'Pausar lembretes'} />
+    <View style={estilos.formularioAcao}><Botao texto="Salvar medicamento" onPress={salvar} /></View>
+    {!novo && <><View style={estilos.formularioAcoesSecundarias}>
+      <Botao texto={medicamento.situacao === 'pausado' ? 'Retomar lembretes' : 'Pausar lembretes'} variante="suave" onPress={() => onPausar(medicamento.situacao === 'pausado' ? 'ativo' : 'pausado')} accessibilityLabel={medicamento.situacao === 'pausado' ? 'Retomar lembretes' : 'Pausar lembretes'} />
       <Botao texto="Excluir medicamento" variante="perigo" onPress={excluir} />
+    </View>
       <View style={estilos.registrosRecentes}><Text allowFontScaling style={estilos.secaoTitulo}>Registros recentes</Text>{registrosRecentes.length === 0 ? <Text allowFontScaling style={estilos.secundario}>Ainda não há registros.</Text> : registrosRecentes.map((registro) => <View key={registro.id} style={estilos.registroRecente}><Text allowFontScaling style={estilos.secundario}>{formatarDataHoraBrasileira(registro.previstoPara.slice(0, 16))}</Text><EstadoRegistroVisual estado={registro.estado} compacto /></View>)}</View></>}
   </ScrollView>;
 }

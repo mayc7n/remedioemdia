@@ -313,7 +313,7 @@ export default function App() {
 
   if (estado.modoCuidador === 'naoInformado') return <BoasVindas somenteModo onConcluir={concluirEscolhaMigrada} />;
 
-  if (medicamentoSelecionado) return <SafeAreaView style={{ flex: 1, backgroundColor: cores.fundo }}><StatusBar style="dark" /><View style={{ flex: 1, padding: 22 }}><Botao texto="Voltar para medicamentos" variante="texto" onPress={() => setMedicamentoAberto(null)} /><DetalheMedicamento medicamento={medicamentoSelecionado} novo={medicamentoSelecionado.id === 'novo'} registros={estado.registros} onSalvar={salvarMedicamento} onPausar={mudarSituacao} onExcluir={excluirMedicamento} /></View></SafeAreaView>;
+  if (medicamentoSelecionado) return <SafeAreaView style={estilos.tela}><StatusBar style="dark" /><View style={estilos.detalheConteudo}><Botao texto="Voltar para medicamentos" variante="texto" onPress={() => setMedicamentoAberto(null)} /><DetalheMedicamento medicamento={medicamentoSelecionado} novo={medicamentoSelecionado.id === 'novo'} registros={estado.registros} onSalvar={salvarMedicamento} onPausar={mudarSituacao} onExcluir={excluirMedicamento} /></View></SafeAreaView>;
 
   return <SafeAreaView edges={['top', 'left', 'right']} style={estilos.tela}>
     <StatusBar style="dark" />

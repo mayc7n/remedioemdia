@@ -31,6 +31,7 @@ export const cores = {
 export const estilos = StyleSheet.create({
   tela: { flex: 1, backgroundColor: cores.fundo },
   conteudo: { width: '100%', maxWidth: tamanhos.conteudoMaximo, alignSelf: 'center', paddingHorizontal: espacamentos.lg },
+  detalheConteudo: { flex: 1, width: '100%', maxWidth: tamanhos.conteudoMaximo, alignSelf: 'center', paddingHorizontal: espacamentos.lg, paddingTop: espacamentos.lg },
   modalBackdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(35,31,27,0.32)' },
   modalFolha: { maxHeight: '88%', backgroundColor: cores.fundo, borderTopLeftRadius: raios.grande, borderTopRightRadius: raios.grande, padding: espacamentos.lg, paddingBottom: espacamentos.xxl },
   campoMultilinha: { minHeight: 96, paddingTop: 14 },
@@ -57,6 +58,11 @@ export const estilos = StyleSheet.create({
   desativado: { opacity: 0.45 },
 
   campo: { marginTop: espacamentos.lg },
+  formularioConteudo: { paddingBottom: espacamentos.xl },
+  formularioSecaoTitulo: { color: cores.texto, ...tipografia.secao, marginTop: espacamentos.xl, marginBottom: espacamentos.xxs },
+  formularioAcao: { marginTop: espacamentos.lg },
+  formularioAcoesSecundarias: { marginTop: espacamentos.xl, paddingTop: espacamentos.md, borderTopWidth: 1, borderTopColor: cores.borda },
+  formularioNotaFinal: { color: cores.mutado, ...tipografia.secundario, marginTop: espacamentos.sm },
   label: { color: cores.texto, fontSize: 15, fontWeight: '600', marginBottom: espacamentos.xs },
   input: { minHeight: 52, borderWidth: 1, borderColor: cores.borda, borderRadius: raios.grande, backgroundColor: cores.branco, paddingHorizontal: 14, color: cores.texto, fontSize: tipografia.secao.fontSize },
   erro: { color: cores.vermelho, ...tipografia.secundario, marginTop: espacamentos.xs },
@@ -79,6 +85,7 @@ export const estilos = StyleSheet.create({
   pickerAcao: { minWidth: tamanhos.toqueMinimo, minHeight: tamanhos.toqueMinimo, alignItems: 'center', justifyContent: 'center' },
   pickerCancelar: { color: cores.verde, ...tipografia.secundario, fontWeight: '600', padding: espacamentos.xs },
   modalFechar: { minWidth: tamanhos.toqueMinimo, minHeight: tamanhos.toqueMinimo, alignItems: 'center', justifyContent: 'center' },
+  modalTitulo: { flex: 1, minWidth: 0 },
 
   cartao: { backgroundColor: cores.branco, borderRadius: raios.grande, padding: 17, marginBottom: espacamentos.sm, borderWidth: 1, borderColor: cores.borda },
   linhaEntre: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: espacamentos.sm },
