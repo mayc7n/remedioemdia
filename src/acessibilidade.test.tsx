@@ -98,7 +98,7 @@ describe('acessibilidade dos fluxos críticos', () => {
     expect(tela.getByRole('button', { name: 'Registrar como tomado' })).toHaveStyle({ minHeight: 48 });
     expect(tela.getByRole('button', { name: 'Adiar lembrete' })).toHaveStyle({ minHeight: 48 });
     expect(tela.getByRole('button', { name: 'Registrar como esquecido' })).toHaveStyle({ minHeight: 48 });
-    expect(tela.getByTestId('estado-pendente')).toBeTruthy();
+    expect(tela.getAllByTestId('estado-pendente')).toHaveLength(2);
   });
 
   it('mantém alvos de toque mínimos e permite fonte ampliada nos controles', async () => {
