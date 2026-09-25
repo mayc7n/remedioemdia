@@ -1,9 +1,9 @@
 import { EstadoApp } from '../dominio/agenda';
-import { carregarEstado, salvarEstado } from '../dados/armazenamento';
+import { carregarEstadoComStatus, salvarEstado } from '../dados/armazenamento';
 import { criarSnapshotWidget, processarAcaoWidgetPersistida } from './estado';
 
 jest.mock('../dados/armazenamento', () => ({
-  carregarEstado: jest.fn(),
+  carregarEstadoComStatus: jest.fn(),
   salvarEstado: jest.fn(),
 }));
 
@@ -28,6 +28,10 @@ const medicamento = {
 };
 
 describe('estado do widget', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('publica o próximo medicamento real e seu estado', () => {
     const snapshot = criarSnapshotWidget({ ...estadoBase, medicamentos: [medicamento] }, new Date(2026, 8, 19, 7, 0));
 
@@ -49,11 +53,21 @@ describe('estado do widget', () => {
   });
 
   it('persiste ações do widget com origem própria e publica novo snapshot', async () => {
-    (carregarEstado as jest.Mock).mockResolvedValue({ ...estadoBase, medicamentos: [medicamento] });
+    (carregarEstadoComStatus as jest.Mock).mockResolvedValue({ estado: { ...estadoBase, medicamentos: [medicamento] }, status: 'disponivel' });
 
     const resultado = await processarAcaoWidgetPersistida('taken', 'm1-2026-09-19-08:00', new Date(2026, 8, 19, 7, 0));
 
     expect(salvarEstado).toHaveBeenCalledWith(expect.objectContaining({ registros: [expect.objectContaining({ estado: 'taken', origem: 'widget' })] }));
     expect(resultado.snapshot.horario).toBe('20:00');
+  });
+
+  it('não confirma ação do widget quando o armazenamento está indisponível', async () => {
+    (carregarEstadoComStatus as jest.Mock).mockResolvedValue({ estado: { ...estadoBase, medicamentos: [medicamento] }, status: 'indisponivel' });
+
+    const resultado = await processarAcaoWidgetPersistida('taken', 'm1-2026-09-19-08:00', new Date(2026, 8, 19, 7, 0));
+
+    expect(resultado.estado.registros).toEqual([]);
+    expect(resultado.snapshot.horario).toBe('08:00');
+    expect(salvarEstado).not.toHaveBeenCalled();
   });
 });

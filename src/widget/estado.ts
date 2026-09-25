@@ -1,4 +1,4 @@
-import { carregarEstado, salvarEstado } from '../dados/armazenamento';
+import { carregarEstadoComStatus, salvarEstado } from '../dados/armazenamento';
 import { aplicarAcaoNaOcorrencia, EstadoApp, ocorrenciasDoDia } from '../dominio/agenda';
 
 export type EstadoWidget = 'pendente' | 'taken' | 'snoozed' | 'missed' | 'nenhum';
@@ -34,7 +34,9 @@ export function criarSnapshotWidget(estado: EstadoApp, agora = new Date()): Widg
 }
 
 export async function processarAcaoWidgetPersistida(acao: 'taken' | 'snoozed', ocorrenciaId: string, agora = new Date()) {
-  const estado = await carregarEstado();
+  const leitura = await carregarEstadoComStatus();
+  const estado = leitura.estado;
+  if (leitura.status !== 'disponivel') return { estado, snapshot: criarSnapshotWidget(estado, agora) };
   const atualizado = aplicarAcaoNaOcorrencia(estado, ocorrenciaId, acao, 'widget');
   if (atualizado !== estado) await salvarEstado(atualizado);
   return { estado: atualizado, snapshot: criarSnapshotWidget(atualizado, agora) };

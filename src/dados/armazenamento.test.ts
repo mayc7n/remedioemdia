@@ -1,5 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
-import { carregarEstado } from './armazenamento';
+import { estadoInicial } from '../dominio/agenda';
+import { carregarEstado, carregarEstadoComStatus, mensagemStatusArmazenamento, salvarEstado } from './armazenamento';
 
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(),
@@ -67,5 +68,25 @@ describe('armazenamento do estado', () => {
     const estado = await carregarEstado();
 
     expect(estado).toMatchObject({ versao: 3, modoCuidador: 'naoInformado', medicamentos: [], registros: [], consultas: [] });
+  });
+
+  it('marca leitura indisponível e não grava o estado inicial de fallback', async () => {
+    getItemAsync.mockRejectedValue(new Error('armazenamento indisponível'));
+
+    const resultado = await carregarEstadoComStatus();
+
+    expect(resultado.status).toBe('indisponivel');
+    expect(resultado.estado).toEqual(expect.objectContaining({ medicamentos: [], registros: [], consultas: [] }));
+    expect(setItemAsync).not.toHaveBeenCalled();
+  });
+
+  it('retorna falha de gravação sem lançar exceção', async () => {
+    setItemAsync.mockRejectedValue(new Error('armazenamento indisponível'));
+
+    await expect(salvarEstado(estadoInicial)).resolves.toBe(false);
+  });
+
+  it('explica que os dados locais devem ser preservados quando o armazenamento falha', () => {
+    expect(mensagemStatusArmazenamento('indisponivel')).toContain('dados locais');
   });
 });

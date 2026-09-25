@@ -6,7 +6,7 @@ import { Botao } from './src/componentes/Botao';
 import type { ModoCuidadorEscolhido } from './src/componentes/EscolhaModoCuidador';
 import { Navegacao } from './src/componentes/Navegacao';
 import { cores, espacamentos, estilos } from './src/componentes/tema';
-import { carregarEstado, salvarEstado } from './src/dados/armazenamento';
+import { carregarEstadoComStatus, mensagemStatusArmazenamento, salvarEstado, type StatusArmazenamento } from './src/dados/armazenamento';
 import {
   Consulta,
   EstadoApp,
@@ -82,17 +82,37 @@ export default function App() {
   const [cuidadorAvisos, setCuidadorAvisos] = useState({ esquecido: true, adiado: true, consulta: true });
   const [desfazerPendente, setDesfazerPendente] = useState<DesfazerPendente | null>(null);
   const [statusNotificacoes, setStatusNotificacoes] = useState<StatusNotificacoes | null>(null);
+  const [statusArmazenamento, setStatusArmazenamento] = useState<StatusArmazenamento | null>(null);
   const estadoRef = useRef(estado);
+  const statusArmazenamentoRef = useRef<StatusArmazenamento>('disponivel');
   const sincronizandoRetomadaRef = useRef(false);
 
+  const definirStatusArmazenamento = (status: StatusArmazenamento) => {
+    statusArmazenamentoRef.current = status;
+    setStatusArmazenamento(status);
+  };
+
   const persistir = async (proximo: EstadoApp, sincronizar = true) => {
+    if (statusArmazenamentoRef.current === 'indisponivel') {
+      const leitura = await carregarEstadoComStatus();
+      definirStatusArmazenamento(leitura.status);
+      if (leitura.status === 'indisponivel') return;
+      estadoRef.current = leitura.estado;
+      setEstado(leitura.estado);
+      return;
+    }
     const resultado = sincronizar
       ? await sincronizarNotificacoesComFuso(proximo)
       : { estado: proximo, fusoMudou: false, quantidade: 0, status: statusNotificacoes ?? 'ativas' as const };
     setStatusNotificacoes(resultado.status);
     estadoRef.current = resultado.estado;
     setEstado(resultado.estado);
-    await salvarEstado(resultado.estado);
+    const persistido = await salvarEstado(resultado.estado);
+    if (!persistido) {
+      definirStatusArmazenamento('indisponivel');
+      return;
+    }
+    definirStatusArmazenamento('disponivel');
     await atualizarWidgetAndroid(resultado.estado);
   };
 
@@ -121,7 +141,9 @@ export default function App() {
   useEffect(() => {
     let montado = true;
     (async () => {
-      const salvo = await carregarEstado();
+      const leitura = await carregarEstadoComStatus();
+      const salvo = leitura.estado;
+      definirStatusArmazenamento(leitura.status);
       const acoesDoWidget = await lerEAceitarAcoesDoLedger();
       const respostaInicial = await Notifications.getLastNotificationResponseAsync().catch(() => null);
       const acaoInicial = interpretarRespostaNotificacao(respostaInicial);
@@ -139,7 +161,10 @@ export default function App() {
       estadoRef.current = resultado.estado;
       setEstado(resultado.estado);
       setStatusNotificacoes(resultado.status);
-      if (resultado.fusoMudou) await salvarEstado(resultado.estado);
+      if (resultado.fusoMudou && leitura.status === 'disponivel') {
+        const persistido = await salvarEstado(resultado.estado);
+        if (!persistido) definirStatusArmazenamento('indisponivel');
+      }
       await atualizarWidgetAndroid(resultado.estado);
       setCarregando(false);
     })();
@@ -323,11 +348,13 @@ export default function App() {
   if (medicamentoSelecionado) return <SafeAreaView style={estilos.tela}><StatusBar style="dark" /><View style={estilos.detalheConteudo}><Botao texto="Voltar para medicamentos" variante="texto" onPress={() => setMedicamentoAberto(null)} /><DetalheMedicamento medicamento={medicamentoSelecionado} novo={medicamentoSelecionado.id === 'novo'} registros={estado.registros} onSalvar={salvarMedicamento} onPausar={mudarSituacao} onExcluir={excluirMedicamento} /></View></SafeAreaView>;
 
   const mensagemNotificacoes = statusNotificacoes ? mensagemStatusNotificacoes(statusNotificacoes) : null;
+  const mensagemArmazenamento = statusArmazenamento ? mensagemStatusArmazenamento(statusArmazenamento) : null;
 
   return <SafeAreaView edges={['top', 'left', 'right']} style={estilos.tela}>
     <StatusBar style="dark" />
     <ScrollView style={estilos.flexivel} contentContainerStyle={[estilos.conteudo, { paddingTop: espacamentos.lg, paddingBottom: espacamentos.lg }]}>
       {mensagemNotificacoes && <View accessibilityRole="alert" style={estilos.avisoNotificacoes}><Text allowFontScaling style={estilos.secundario}>{mensagemNotificacoes}</Text></View>}
+      {mensagemArmazenamento && <View accessibilityRole="alert" style={estilos.avisoNotificacoes}><Text allowFontScaling style={estilos.secundario}>{mensagemArmazenamento}</Text></View>}
       {aba === 'inicio' && <Inicio ocorrencias={ocorrencias} registros={estado.registros} consultas={consultasFuturas} marcar={marcar} abrirMedicamento={() => setMedicamentoAberto('novo')} desfazerOcorrenciaId={desfazerPendente?.ocorrenciaId} desfazer={desfazer} />}
       {aba === 'medicamentos' && <Medicamentos medicamentos={estado.medicamentos} abrirDetalhe={setMedicamentoAberto} abrirNovo={() => setMedicamentoAberto('novo')} />}
       {aba === 'historico' && <Historico registros={estado.registros} />}
