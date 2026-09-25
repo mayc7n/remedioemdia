@@ -2,6 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, AppState, Linking, Platform, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AvisoNotificacoes } from './src/componentes/AvisoNotificacoes';
 import { Botao } from './src/componentes/Botao';
 import type { ModoCuidadorEscolhido } from './src/componentes/EscolhaModoCuidador';
 import { Navegacao } from './src/componentes/Navegacao';
@@ -339,6 +340,12 @@ export default function App() {
     { text: 'Revogar', style: 'destructive', onPress: async () => { await persistir(revogarCuidador(estado, true)); setModal(null); } },
   ]);
 
+  const abrirConfiguracoesNotificacoes = () => {
+    void Linking.openSettings().catch(() => {
+      Alert.alert('Não foi possível abrir as configurações', 'Abra as configurações do sistema e permita as notificações do Remédio em Dia.');
+    });
+  };
+
   if (carregando) return <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: cores.fundo }}><ActivityIndicator color={cores.verde} size="large" /></View>;
 
   if (!estado.concluiuBoasVindas) return <BoasVindas onConcluir={concluirBoasVindas} />;
@@ -347,13 +354,13 @@ export default function App() {
 
   if (medicamentoSelecionado) return <SafeAreaView style={estilos.tela}><StatusBar style="dark" /><View style={estilos.detalheConteudo}><Botao texto="Voltar para medicamentos" variante="texto" onPress={() => setMedicamentoAberto(null)} /><DetalheMedicamento medicamento={medicamentoSelecionado} novo={medicamentoSelecionado.id === 'novo'} registros={estado.registros} onSalvar={salvarMedicamento} onPausar={mudarSituacao} onExcluir={excluirMedicamento} /></View></SafeAreaView>;
 
-  const mensagemNotificacoes = statusNotificacoes ? mensagemStatusNotificacoes(statusNotificacoes) : null;
   const mensagemArmazenamento = statusArmazenamento ? mensagemStatusArmazenamento(statusArmazenamento) : null;
+  const mensagemNotificacoes = statusNotificacoes ? mensagemStatusNotificacoes(statusNotificacoes) : null;
 
   return <SafeAreaView edges={['top', 'left', 'right']} style={estilos.tela}>
     <StatusBar style="dark" />
     <ScrollView style={estilos.flexivel} contentContainerStyle={[estilos.conteudo, { paddingTop: espacamentos.lg, paddingBottom: espacamentos.lg }]}>
-      {mensagemNotificacoes && <View accessibilityRole="alert" style={estilos.avisoNotificacoes}><Text allowFontScaling style={estilos.secundario}>{mensagemNotificacoes}</Text></View>}
+      {statusNotificacoes && <AvisoNotificacoes status={statusNotificacoes} mensagem={mensagemNotificacoes} abrirConfiguracoes={abrirConfiguracoesNotificacoes} />}
       {mensagemArmazenamento && <View accessibilityRole="alert" style={estilos.avisoNotificacoes}><Text allowFontScaling style={estilos.secundario}>{mensagemArmazenamento}</Text></View>}
       {aba === 'inicio' && <Inicio ocorrencias={ocorrencias} registros={estado.registros} consultas={consultasFuturas} marcar={marcar} abrirMedicamento={() => setMedicamentoAberto('novo')} desfazerOcorrenciaId={desfazerPendente?.ocorrenciaId} desfazer={desfazer} />}
       {aba === 'medicamentos' && <Medicamentos medicamentos={estado.medicamentos} abrirDetalhe={setMedicamentoAberto} abrirNovo={() => setMedicamentoAberto('novo')} />}
