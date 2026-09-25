@@ -102,6 +102,7 @@ export const estilos = StyleSheet.create({
   seta: { color: cores.mutado, fontSize: 26, lineHeight: 24, fontWeight: '300' },
 
   avisoDesfazer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: espacamentos.xs, paddingVertical: espacamentos.xs, borderBottomWidth: 1, borderBottomColor: cores.borda },
+  avisoNotificacoes: { backgroundColor: cores.ambarClaro, borderRadius: raios.grande, padding: espacamentos.md, marginBottom: espacamentos.md, borderLeftWidth: 3, borderLeftColor: cores.ambar },
   proximaDose: { backgroundColor: cores.destaqueClaro, borderRadius: raios.grande, padding: espacamentos.md, marginBottom: espacamentos.xxs },
   proximaDoseCabecalho: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: espacamentos.xs },
   proximaDoseIdentificacao: { flexDirection: 'row', alignItems: 'center', gap: espacamentos.md, marginTop: espacamentos.sm },

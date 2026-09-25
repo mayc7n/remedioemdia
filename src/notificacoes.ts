@@ -22,6 +22,15 @@ const JANELA_INTERVALO_DIAS = 60;
 export const CATEGORIA_MEDICAMENTO = 'medicamento_acoes';
 export const CANAL_MEDICAMENTOS = 'medicamentos';
 
+export type StatusNotificacoes = 'ativas' | 'desativadas' | 'indisponiveis' | 'falha';
+
+export const mensagemStatusNotificacoes = (status: StatusNotificacoes) => {
+  if (status === 'desativadas') return 'Seus dados foram preservados, mas os lembretes estão desativados. Permita notificações nas configurações do sistema.';
+  if (status === 'indisponiveis') return 'Seus dados foram preservados, mas as notificações nativas não estão disponíveis neste ambiente.';
+  if (status === 'falha') return 'Seus dados foram preservados, mas não foi possível atualizar os lembretes. Tente abrir o app novamente.';
+  return null;
+};
+
 export const deveSincronizarAoRetomar = (anterior: AppStateStatus | null, atual: AppStateStatus) =>
   atual === 'active' && anterior !== 'active';
 
@@ -194,32 +203,47 @@ export async function configurarNotificacoesNativas() {
     // Categorias podem ficar indisponíveis em ambientes de teste ou sem módulo nativo.
   }
   if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync(CANAL_MEDICAMENTOS, {
-      name: 'Lembretes de medicamentos',
-      importance: Notifications.AndroidImportance.HIGH,
-    });
+    try {
+      await Notifications.setNotificationChannelAsync(CANAL_MEDICAMENTOS, {
+        name: 'Lembretes de medicamentos',
+        importance: Notifications.AndroidImportance.HIGH,
+      });
+    } catch {
+      // O estado será apresentado como indisponível quando a permissão for consultada.
+    }
   }
 }
 
 export async function prepararNotificacoes() {
-  await configurarNotificacoesNativas();
-  const permissao = await Notifications.getPermissionsAsync();
-  if (!permissao.granted) {
-    const solicitada = await Notifications.requestPermissionsAsync();
-    return solicitada.granted;
+  try {
+    await configurarNotificacoesNativas();
+    const permissao = await Notifications.getPermissionsAsync();
+    if (!permissao.granted) {
+      const solicitada = await Notifications.requestPermissionsAsync();
+      return solicitada.granted;
+    }
+    return true;
+  } catch {
+    return false;
   }
-  return true;
 }
 
 export async function sincronizarNotificacoes(estado: EstadoApp, agora = new Date()) {
   const agendadas = await Notifications.getAllScheduledNotificationsAsync();
-  await Promise.all(agendadas
+  const gerenciadas = agendadas
     .filter(ehNotificacaoDoApp)
-    .filter((request) => !ehAdiamento(request))
-    .map(({ identifier }) => Notifications.cancelScheduledNotificationAsync(identifier)));
+    .filter((request) => !ehAdiamento(request));
 
   const requests = [...requestsMedicamentos(estado, agora), ...requestsConsultas(estado, agora)];
-  await Promise.all(requests.map(agendar));
+  const idsExistentes = new Set(gerenciadas.map(({ identifier }) => identifier));
+  await Promise.all(requests
+    .filter((request) => !idsExistentes.has(request.identifier ?? ''))
+    .map(agendar));
+
+  const idsDesejados = new Set(requests.map((request) => request.identifier));
+  await Promise.all(gerenciadas
+    .filter(({ identifier }) => !idsDesejados.has(identifier))
+    .map(({ identifier }) => Notifications.cancelScheduledNotificationAsync(identifier)));
   return requests.length;
 }
 
@@ -228,11 +252,28 @@ export async function sincronizarNotificacoesComFuso(estado: EstadoApp, agora = 
   const estadoAtualizado = estado.fusoHorarioObservado === fusoHorario
     ? estado
     : { ...estado, fusoHorarioObservado: fusoHorario };
-  const quantidade = await sincronizarNotificacoes(estadoAtualizado, agora);
+
+  let permissao: Notifications.NotificationPermissionsStatus;
+  try {
+    permissao = await Notifications.getPermissionsAsync();
+  } catch {
+    return { estado: estadoAtualizado, fusoMudou: estadoAtualizado !== estado, quantidade: 0, status: 'indisponiveis' as const };
+  }
+  if (!permissao.granted) {
+    return { estado: estadoAtualizado, fusoMudou: estadoAtualizado !== estado, quantidade: 0, status: 'desativadas' as const };
+  }
+
+  let quantidade = 0;
+  try {
+    quantidade = await sincronizarNotificacoes(estadoAtualizado, agora);
+  } catch {
+    return { estado: estadoAtualizado, fusoMudou: estadoAtualizado !== estado, quantidade: 0, status: 'falha' as const };
+  }
   return {
     estado: estadoAtualizado,
     quantidade,
     fusoMudou: estadoAtualizado !== estado,
+    status: 'ativas' as const,
   };
 }
 

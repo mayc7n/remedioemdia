@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, AppState, Linking, Platform, ScrollView, View } from 'react-native';
+import { ActivityIndicator, Alert, AppState, Linking, Platform, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Botao } from './src/componentes/Botao';
 import type { ModoCuidadorEscolhido } from './src/componentes/EscolhaModoCuidador';
@@ -26,8 +26,10 @@ import {
   deveSincronizarAoRetomar,
   interpretarRespostaNotificacao,
   prepararNotificacoes,
+  mensagemStatusNotificacoes,
   processarRespostaNotificacao,
   processarAcaoNotificacao,
+  type StatusNotificacoes,
   sincronizarNotificacoesComFuso,
 } from './src/notificacoes';
 import * as Notifications from 'expo-notifications';
@@ -79,11 +81,15 @@ export default function App() {
   const [cuidadorContato, setCuidadorContato] = useState('');
   const [cuidadorAvisos, setCuidadorAvisos] = useState({ esquecido: true, adiado: true, consulta: true });
   const [desfazerPendente, setDesfazerPendente] = useState<DesfazerPendente | null>(null);
+  const [statusNotificacoes, setStatusNotificacoes] = useState<StatusNotificacoes | null>(null);
   const estadoRef = useRef(estado);
   const sincronizandoRetomadaRef = useRef(false);
 
   const persistir = async (proximo: EstadoApp, sincronizar = true) => {
-    const resultado = sincronizar ? await sincronizarNotificacoesComFuso(proximo) : { estado: proximo, fusoMudou: false, quantidade: 0 };
+    const resultado = sincronizar
+      ? await sincronizarNotificacoesComFuso(proximo)
+      : { estado: proximo, fusoMudou: false, quantidade: 0, status: statusNotificacoes ?? 'ativas' as const };
+    setStatusNotificacoes(resultado.status);
     estadoRef.current = resultado.estado;
     setEstado(resultado.estado);
     await salvarEstado(resultado.estado);
@@ -132,6 +138,7 @@ export default function App() {
       if (!montado) return;
       estadoRef.current = resultado.estado;
       setEstado(resultado.estado);
+      setStatusNotificacoes(resultado.status);
       if (resultado.fusoMudou) await salvarEstado(resultado.estado);
       await atualizarWidgetAndroid(resultado.estado);
       setCarregando(false);
@@ -315,9 +322,12 @@ export default function App() {
 
   if (medicamentoSelecionado) return <SafeAreaView style={estilos.tela}><StatusBar style="dark" /><View style={estilos.detalheConteudo}><Botao texto="Voltar para medicamentos" variante="texto" onPress={() => setMedicamentoAberto(null)} /><DetalheMedicamento medicamento={medicamentoSelecionado} novo={medicamentoSelecionado.id === 'novo'} registros={estado.registros} onSalvar={salvarMedicamento} onPausar={mudarSituacao} onExcluir={excluirMedicamento} /></View></SafeAreaView>;
 
+  const mensagemNotificacoes = statusNotificacoes ? mensagemStatusNotificacoes(statusNotificacoes) : null;
+
   return <SafeAreaView edges={['top', 'left', 'right']} style={estilos.tela}>
     <StatusBar style="dark" />
     <ScrollView style={estilos.flexivel} contentContainerStyle={[estilos.conteudo, { paddingTop: espacamentos.lg, paddingBottom: espacamentos.lg }]}>
+      {mensagemNotificacoes && <View accessibilityRole="alert" style={estilos.avisoNotificacoes}><Text allowFontScaling style={estilos.secundario}>{mensagemNotificacoes}</Text></View>}
       {aba === 'inicio' && <Inicio ocorrencias={ocorrencias} registros={estado.registros} consultas={consultasFuturas} marcar={marcar} abrirMedicamento={() => setMedicamentoAberto('novo')} desfazerOcorrenciaId={desfazerPendente?.ocorrenciaId} desfazer={desfazer} />}
       {aba === 'medicamentos' && <Medicamentos medicamentos={estado.medicamentos} abrirDetalhe={setMedicamentoAberto} abrirNovo={() => setMedicamentoAberto('novo')} />}
       {aba === 'historico' && <Historico registros={estado.registros} />}

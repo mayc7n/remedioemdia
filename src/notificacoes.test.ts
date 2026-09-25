@@ -8,6 +8,7 @@ import {
   interpretarRespostaNotificacao,
   sincronizarNotificacoes,
   sincronizarNotificacoesComFuso,
+  mensagemStatusNotificacoes,
 } from './notificacoes';
 
 describe('retomada do app', () => {
@@ -89,6 +90,50 @@ beforeEach(() => {
 });
 
 describe('reconciliador de notificações', () => {
+  it('não cancela nem agenda quando as notificações estão desativadas', async () => {
+    (Notifications.getPermissionsAsync as jest.Mock).mockResolvedValue({ granted: false });
+
+    const resultado = await sincronizarNotificacoesComFuso(
+      { ...estadoBase, medicamentos: [medicamento()] },
+      new Date(2026, 8, 19, 7, 0),
+    );
+
+    expect(resultado.status).toBe('desativadas');
+    expect(Notifications.cancelScheduledNotificationAsync).not.toHaveBeenCalled();
+    expect(Notifications.scheduleNotificationAsync).not.toHaveBeenCalled();
+  });
+
+  it('mantém os lembretes anteriores quando um novo agendamento falha', async () => {
+    (Notifications.getAllScheduledNotificationsAsync as jest.Mock).mockResolvedValue([
+      { identifier: 'proprio-antigo', content: { data: { origem: 'remedio-em-dia' } } },
+    ]);
+    (Notifications.scheduleNotificationAsync as jest.Mock).mockRejectedValueOnce(new Error('falha nativa'));
+
+    const resultado = await sincronizarNotificacoesComFuso(
+      { ...estadoBase, medicamentos: [medicamento()] },
+      new Date(2026, 8, 19, 7, 0),
+    );
+
+    expect(resultado.status).toBe('falha');
+    expect(Notifications.cancelScheduledNotificationAsync).not.toHaveBeenCalledWith('proprio-antigo');
+  });
+
+  it('não recria um lembrete que já existe e remove apenas o que ficou obsoleto', async () => {
+    (Notifications.getAllScheduledNotificationsAsync as jest.Mock).mockResolvedValue([
+      { identifier: 'medicamento-m1-diaria-08-00', content: { data: { origem: 'remedio-em-dia' } } },
+      { identifier: 'proprio-antigo', content: { data: { origem: 'remedio-em-dia' } } },
+    ]);
+
+    const resultado = await sincronizarNotificacoesComFuso(
+      { ...estadoBase, medicamentos: [medicamento({ horarios: ['08:00'] })] },
+      new Date(2026, 8, 19, 7, 0),
+    );
+
+    expect(resultado.status).toBe('ativas');
+    expect(Notifications.scheduleNotificationAsync).not.toHaveBeenCalled();
+    expect(Notifications.cancelScheduledNotificationAsync).toHaveBeenCalledWith('proprio-antigo');
+  });
+
   it('oculta o nome do medicamento por padrão', async () => {
     await sincronizarNotificacoes({ ...estadoBase, medicamentos: [medicamento()] }, new Date(2026, 8, 19, 7, 0));
 
@@ -250,6 +295,13 @@ describe('reconciliador de notificações', () => {
 });
 
 describe('permissão de notificações', () => {
+  it('explica que os dados permanecem preservados quando o lembrete falha', () => {
+    expect(mensagemStatusNotificacoes('falha')).toContain('Seus dados foram preservados');
+    expect(mensagemStatusNotificacoes('desativadas')).toContain('configurações do sistema');
+    expect(mensagemStatusNotificacoes('indisponiveis')).toContain('não estão disponíveis');
+    expect(mensagemStatusNotificacoes('ativas')).toBeNull();
+  });
+
   it('retorna falso sem apagar o cadastro quando a permissão é negada', async () => {
     (Notifications.getPermissionsAsync as jest.Mock).mockResolvedValue({ granted: false });
     expect(await prepararNotificacoes()).toBe(false);
@@ -264,5 +316,13 @@ describe('permissão de notificações', () => {
       expect.objectContaining({ identifier: 'snoozed', buttonTitle: 'Adiar 15 min' }),
       expect.objectContaining({ identifier: 'missed', buttonTitle: 'Pular' }),
     ]), expect.anything());
+  });
+
+  it('classifica falha ao consultar a permissão como indisponibilidade nativa', async () => {
+    (Notifications.getPermissionsAsync as jest.Mock).mockRejectedValueOnce(new Error('módulo ausente'));
+
+    const resultado = await sincronizarNotificacoesComFuso(estadoBase, new Date(2026, 8, 19, 7, 0));
+
+    expect(resultado.status).toBe('indisponiveis');
   });
 });
