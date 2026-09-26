@@ -14,6 +14,7 @@ export type MetadadosNotificacao = {
   tipo: 'medicamento' | 'consulta';
   entidadeId: string;
   ocorrenciaId?: string;
+  horario?: string;
   finalidade: FinalidadeNotificacao;
 };
 
@@ -56,6 +57,8 @@ const dataLocal = (data: Date) => {
   return `${ano}-${mes}-${dia}`;
 };
 
+const ehHorario = (valor: unknown): valor is string => typeof valor === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(valor);
+
 const dataDaOcorrencia = (dia: Date, horario: string) => {
   const [hora, minuto] = horario.split(':').map(Number);
   const data = new Date(dia);
@@ -81,7 +84,8 @@ const metadados = (
   entidadeId: string,
   finalidade: FinalidadeNotificacao,
   ocorrenciaId?: string,
-): MetadadosNotificacao => ({ origem: ORIGEM, tipo, entidadeId, finalidade, ...(ocorrenciaId ? { ocorrenciaId } : {}) });
+  horario?: string,
+): MetadadosNotificacao => ({ origem: ORIGEM, tipo, entidadeId, finalidade, ...(ocorrenciaId ? { ocorrenciaId } : {}), ...(horario ? { horario } : {}) });
 
 const requestMedicamento = (
   medicamentoId: string,
@@ -91,13 +95,14 @@ const requestMedicamento = (
   finalidade: FinalidadeNotificacao = 'recorrente',
   ocorrenciaId?: string,
   mostrarDetalhes = false,
+  horario?: string,
 ) => ({
   identifier,
   content: {
     title: mostrarDetalhes ? 'Remédio em Dia' : 'Lembrete de medicamento',
     body: corpoMedicamento(nome, mostrarDetalhes),
     categoryIdentifier: CATEGORIA_MEDICAMENTO,
-    data: metadados('medicamento', medicamentoId, finalidade, ocorrenciaId),
+    data: metadados('medicamento', medicamentoId, finalidade, ocorrenciaId, horario),
   },
   trigger: { ...trigger, channelId: CANAL_MEDICAMENTOS },
 });
@@ -147,6 +152,7 @@ const requestsMedicamentos = (estado: EstadoApp, agora: Date) => estado.medicame
           'recorrente',
           undefined,
           estado.mostrarDetalhesNotificacao,
+          horario,
         );
       });
     }
@@ -162,6 +168,7 @@ const requestsMedicamentos = (estado: EstadoApp, agora: Date) => estado.medicame
           'recorrente',
           undefined,
           estado.mostrarDetalhesNotificacao,
+          horario,
         );
       }));
     }
@@ -182,6 +189,7 @@ const requestsMedicamentos = (estado: EstadoApp, agora: Date) => estado.medicame
         'recorrente',
         ocorrencia.id,
         estado.mostrarDetalhesNotificacao,
+        ocorrencia.horario,
       ));
   });
 
@@ -323,18 +331,25 @@ export function processarAcaoNotificacao(estado: EstadoApp, ocorrenciaId: string
 
 export function interpretarRespostaNotificacao(
   resposta: RespostaNotificacao,
+  agora = new Date(),
 ): { ocorrenciaId: string; acao: 'taken' | 'snoozed' | 'missed' } | null {
   if (!resposta) return null;
   const acao = resposta.actionIdentifier;
   if (acao !== 'taken' && acao !== 'snoozed' && acao !== 'missed') return null;
   const data = resposta.notification.request.content.data;
-  if (typeof data !== 'object' || data === null || !('origem' in data) || data.origem !== ORIGEM || !('ocorrenciaId' in data) || typeof data.ocorrenciaId !== 'string' || !data.ocorrenciaId) return null;
-  return { ocorrenciaId: data.ocorrenciaId, acao };
+  if (typeof data !== 'object' || data === null || !('origem' in data) || data.origem !== ORIGEM) return null;
+  if ('ocorrenciaId' in data) {
+    return typeof data.ocorrenciaId === 'string' && data.ocorrenciaId
+      ? { ocorrenciaId: data.ocorrenciaId, acao }
+      : null;
+  }
+  if (!('tipo' in data) || data.tipo !== 'medicamento' || !('entidadeId' in data) || typeof data.entidadeId !== 'string' || !('horario' in data) || !ehHorario(data.horario)) return null;
+  return { ocorrenciaId: `${data.entidadeId}-${dataLocal(agora)}-${data.horario}`, acao };
 }
 
 export type RespostaNotificacao = { actionIdentifier: string; notification: { request: { content: { data?: unknown } } } } | null | undefined;
 
-export function processarRespostaNotificacao(estado: EstadoApp, resposta: RespostaNotificacao) {
-  const acao = interpretarRespostaNotificacao(resposta);
+export function processarRespostaNotificacao(estado: EstadoApp, resposta: RespostaNotificacao, agora = new Date()) {
+  const acao = interpretarRespostaNotificacao(resposta, agora);
   return acao ? processarAcaoNotificacao(estado, acao.ocorrenciaId, acao.acao) : estado;
 }

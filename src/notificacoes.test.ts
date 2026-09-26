@@ -298,6 +298,24 @@ describe('reconciliador de notificações', () => {
     expect(request.trigger).toEqual(expect.objectContaining({ channelId: 'medicamentos' }));
   });
 
+  it('aplica a ação de um lembrete diário na ocorrência do dia do toque', async () => {
+    const estado = { ...estadoBase, medicamentos: [medicamento()] };
+    await sincronizarNotificacoes(estado, new Date(2026, 8, 19, 7, 0));
+    const request = (Notifications.scheduleNotificationAsync as jest.Mock).mock.calls[0][0];
+
+    const resposta = {
+      actionIdentifier: 'taken',
+      notification: { request: { content: { data: request.content.data } } },
+    };
+    const resultado = processarRespostaNotificacao(estado, resposta, new Date(2026, 8, 19, 8, 0));
+
+    expect(resultado.registros).toEqual([expect.objectContaining({
+      id: 'm1-2026-09-19-08:00',
+      estado: 'taken',
+      origem: 'notification',
+    })]);
+  });
+
   it('interpreta somente ações conhecidas que tenham uma ocorrência', () => {
     const resposta = { actionIdentifier: 'taken', notification: { request: { content: { data: { origem: 'remedio-em-dia', ocorrenciaId: 'm1-2026-09-19-08:00' } } } } };
 
