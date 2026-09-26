@@ -31,6 +31,12 @@ export const mensagemStatusNotificacoes = (status: StatusNotificacoes) => {
   return null;
 };
 
+const notificacoesAutorizadas = (permissao: Notifications.NotificationPermissionsStatus) =>
+  permissao.granted
+  || permissao.ios?.status === Notifications.IosAuthorizationStatus.AUTHORIZED
+  || permissao.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL
+  || permissao.ios?.status === Notifications.IosAuthorizationStatus.EPHEMERAL;
+
 export const deveSincronizarAoRetomar = (anterior: AppStateStatus | null, atual: AppStateStatus) =>
   atual === 'active' && anterior !== 'active';
 
@@ -218,9 +224,9 @@ export async function prepararNotificacoes() {
   try {
     await configurarNotificacoesNativas();
     const permissao = await Notifications.getPermissionsAsync();
-    if (!permissao.granted) {
+    if (!notificacoesAutorizadas(permissao)) {
       const solicitada = await Notifications.requestPermissionsAsync();
-      return solicitada.granted;
+      return notificacoesAutorizadas(solicitada);
     }
     return true;
   } catch {
@@ -259,7 +265,7 @@ export async function sincronizarNotificacoesComFuso(estado: EstadoApp, agora = 
   } catch {
     return { estado: estadoAtualizado, fusoMudou: estadoAtualizado !== estado, quantidade: 0, status: 'indisponiveis' as const };
   }
-  if (!permissao.granted) {
+  if (!notificacoesAutorizadas(permissao)) {
     return { estado: estadoAtualizado, fusoMudou: estadoAtualizado !== estado, quantidade: 0, status: 'desativadas' as const };
   }
 

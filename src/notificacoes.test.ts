@@ -46,6 +46,13 @@ jest.mock('expo-notifications', () => ({
     DAILY: 'daily',
     WEEKLY: 'weekly',
   },
+  IosAuthorizationStatus: {
+    NOT_DETERMINED: 0,
+    DENIED: 1,
+    AUTHORIZED: 2,
+    PROVISIONAL: 3,
+    EPHEMERAL: 4,
+  },
   setNotificationHandler: jest.fn(),
   getPermissionsAsync: jest.fn(),
   requestPermissionsAsync: jest.fn(),
@@ -101,6 +108,21 @@ describe('reconciliador de notificações', () => {
     expect(resultado.status).toBe('desativadas');
     expect(Notifications.cancelScheduledNotificationAsync).not.toHaveBeenCalled();
     expect(Notifications.scheduleNotificationAsync).not.toHaveBeenCalled();
+  });
+
+  it('reconcilia quando o iOS concede autorização provisional', async () => {
+    (Notifications.getPermissionsAsync as jest.Mock).mockResolvedValue({
+      granted: false,
+      ios: { status: Notifications.IosAuthorizationStatus.PROVISIONAL },
+    });
+
+    const resultado = await sincronizarNotificacoesComFuso(
+      { ...estadoBase, medicamentos: [medicamento()] },
+      new Date(2026, 8, 19, 7, 0),
+    );
+
+    expect(resultado.status).toBe('ativas');
+    expect(Notifications.scheduleNotificationAsync).toHaveBeenCalled();
   });
 
   it('mantém os lembretes anteriores quando um novo agendamento falha', async () => {
