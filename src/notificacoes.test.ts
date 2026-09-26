@@ -290,6 +290,13 @@ describe('reconciliador de notificações', () => {
     }));
   });
 
+  it('preserva hífens do medicamento no metadata do adiamento', async () => {
+    await agendarAdiantamento('Remédio', 'med-abc-123-2026-09-19-08:00');
+
+    const request = (Notifications.scheduleNotificationAsync as jest.Mock).mock.calls[0][0];
+    expect(request.content.data.entidadeId).toBe('med-abc-123');
+  });
+
   it('associa ações e canal à notificação de medicamento', async () => {
     await sincronizarNotificacoes({ ...estadoBase, medicamentos: [medicamento()] }, new Date(2026, 8, 19, 7, 0));
 

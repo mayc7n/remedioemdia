@@ -69,6 +69,12 @@ const dataDaOcorrencia = (dia: Date, horario: string) => {
 const horarioPartes = (horario: string) => horario.split(':').map(Number) as [number, number];
 const horarioId = (horario: string) => horario.replace(':', '-');
 
+const medicamentoIdDaOcorrencia = (ocorrenciaId?: string) => {
+  if (!ocorrenciaId) return 'avulso';
+  const medicamentoId = ocorrenciaId.replace(/-\d{4}-\d{2}-\d{2}-(?:[01]\d|2[0-3]):[0-5]\d$/, '');
+  return medicamentoId === ocorrenciaId ? 'avulso' : medicamentoId;
+};
+
 const corpoMedicamento = (nome: string, mostrarDetalhes: boolean) => mostrarDetalhes
   ? `Está na hora de ${nome}. Siga a orientação do seu médico.`
   : 'Você tem um lembrete de medicamento.';
@@ -295,7 +301,7 @@ export async function agendarAdiantamento(nome: string, ocorrenciaId?: string, m
   const data = new Date(Date.now() + 15 * 60 * 1000);
   const identifier = `adiamento-${ocorrenciaId ?? 'avulso'}-${Date.now()}`;
   await agendar(requestMedicamento(
-    ocorrenciaId?.split('-')[0] ?? 'avulso',
+    medicamentoIdDaOcorrencia(ocorrenciaId),
     nome,
     identifier,
     { type: Notifications.SchedulableTriggerInputTypes.DATE, date: data },
