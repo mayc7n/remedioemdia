@@ -2,6 +2,13 @@
 
 Este roteiro separa empacotamento de comportamento real em aparelho. Export, Jest e TypeScript não aprovam notificações, widgets, tela bloqueada, Dynamic Type, safe area, TalkBack ou VoiceOver.
 
+## Tentativa de QA — 26/09/2026
+
+- Android físico: não iniciado; `adb` não está instalado e nenhum dispositivo foi detectado.
+- Android nativo: `./gradlew --no-daemon :app:processDebugMainManifest` chegou à configuração do projeto, mas falhou por ausência do Android SDK (`ANDROID_HOME` ou `android/local.properties`).
+- iOS físico: não iniciado; este ambiente é Ubuntu e não possui `xcodebuild`/macOS.
+- Resultado: QA físico permanece `PENDENTE`; nenhuma evidência de aparelho foi criada nesta tentativa.
+
 ## Registro da execução
 
 | Plataforma | Dispositivo | Sistema | Build | Data | Responsável | Resultado | Evidência |
